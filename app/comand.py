@@ -4,7 +4,7 @@ from pprint import pprint
 import sys
 
 
-logger.remove()  # Удалить стандартный хендлер
+logger.remove()
 logger.add(
     sys.stdout,
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
@@ -24,4 +24,3 @@ def get_balance():
                 f'{coin['coin']} - {coin['walletBalance']} '
                 f'{locked}/ USDT - {coin['usdValue']}'
             )
-
