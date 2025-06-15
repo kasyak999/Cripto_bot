@@ -1,6 +1,7 @@
 from pybit.unified_trading import HTTP
 import os
 from dotenv import load_dotenv
+import argparse
 
 
 load_dotenv()
@@ -13,5 +14,14 @@ session = HTTP(
     testnet=False,
     api_key=API_KEY,
     api_secret=API_SECRET,
-    demo=DEMO  # Для демо режима установите demo=True
+    demo=DEMO
 )
+
+parser = argparse.ArgumentParser(description='Биржа')
+parser.add_argument(
+    '-b',
+    '--balance',
+    help='Узнать баланс',
+    action='store_true',
+)
+args = parser.parse_args()

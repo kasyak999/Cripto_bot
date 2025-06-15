@@ -1,9 +1,9 @@
-from pprint import pprint
-from app.config import session
+from app.config import args
+from app.comand import get_balance
 
 
 if __name__ == '__main__':
-    # pprint(session)
-    print('')
-    response = session.get_wallet_balance(accountType="UNIFIED")
-    pprint(response)
+    if args.balance:
+        get_balance()
+    else:
+        print("-h для получения справки по командам")
