@@ -7,6 +7,14 @@
     python -m venv venv
     source venv/bin/activate
     ```
+2. Установить зависимости
+    ```
+    pip install -r requirements.txt
+    ```
+3. Заупуск
+    ```
+    python main.py 
+    ```
 ### Файл .env
 ```
 API_KEY=публичный_ключ
