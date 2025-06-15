@@ -2,6 +2,8 @@ from pybit.unified_trading import HTTP
 import os
 from dotenv import load_dotenv
 import argparse
+from loguru import logger
+import sys
 
 
 load_dotenv()
@@ -10,6 +12,12 @@ API_KEY = os.getenv('API_KEY')
 API_SECRET = os.getenv('API_SECRET')
 DEMO = True  # True - демо режим / False - не демо
 
+logger.remove()
+logger.add(
+    sys.stdout,
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    level="INFO")
+
 session = HTTP(
     testnet=False,
     api_key=API_KEY,
@@ -17,7 +25,14 @@ session = HTTP(
     demo=DEMO
 )
 
-parser = argparse.ArgumentParser(description='Биржа')
+
+class MyArgumentParser(argparse.ArgumentParser):
+    """ Ошибка при неправильной команде """
+    def error(self, message):
+        self.print_help()
+
+
+parser = MyArgumentParser(description='Биржа')
 parser.add_argument(
     '-b',
     '--balance',
