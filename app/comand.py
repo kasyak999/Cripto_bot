@@ -1,5 +1,4 @@
 from app.config import session, logger
-from pprint import pprint
 
 
 def get_balance():
@@ -14,4 +13,3 @@ def get_balance():
                 f'{coin['coin']} - {coin['walletBalance']} '
                 f'{locked}/ USDT - {coin['usdValue']}'
             )
-            # pprint(coin)

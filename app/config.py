@@ -10,7 +10,7 @@ load_dotenv()
 
 API_KEY = os.getenv('API_KEY')
 API_SECRET = os.getenv('API_SECRET')
-DEMO = True  # True - демо режим / False - не демо
+DEMO = os.getenv("DEMO", "false").lower() == "true"
 
 logger.remove()
 logger.add(
@@ -19,7 +19,6 @@ logger.add(
     level="INFO")
 
 session = HTTP(
-    testnet=False,
     api_key=API_KEY,
     api_secret=API_SECRET,
     demo=DEMO
