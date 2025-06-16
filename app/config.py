@@ -38,4 +38,29 @@ parser.add_argument(
     help='Узнать баланс',
     action='store_true',
 )
+
+parser.add_argument(
+    '-p',
+    '--price',
+    help='Узнать cтоимость монеты'
+)
+
+parser.add_argument(
+    '-buy',
+    '--buy',
+    help='Купить монету'
+)
+
+parser.add_argument(
+    '-unbuy',
+    '--unbuy',
+    help='Продать монету'
+)
+
+parser.add_argument(
+    '-s',
+    '--sum',
+    type=int,
+    help='На сколько USDT продать или купить монету',
+)
 args = parser.parse_args()
