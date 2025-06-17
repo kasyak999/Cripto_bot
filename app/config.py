@@ -38,19 +38,22 @@ parser.add_argument(
     help='Узнать баланс',
     action='store_true',
 )
-
 parser.add_argument(
     '-p',
     '--price',
-    help='Узнать cтоимость монеты'
+    help='Узнать cтоимость монеты и обноаить данные о покупке'
 )
-
+parser.add_argument(
+    '-c',
+    '--cycle',
+    help='Проверять стоимость монеты в цикле',
+    action='store_true'
+)
 parser.add_argument(
     '-buy',
     '--buy',
     help='Купить монету'
 )
-
 parser.add_argument(
     '-unbuy',
     '--unbuy',

@@ -4,3 +4,4 @@ venv/
 .env
 python.py
 123.py
+sqlite.db
