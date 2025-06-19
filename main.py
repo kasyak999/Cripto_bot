@@ -1,5 +1,6 @@
 import sys
 import time
+from datetime import datetime
 
 from app.config import args, logger
 from app.comand import (
@@ -26,10 +27,11 @@ if __name__ == '__main__':
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
+        get_balance()
         while True:
             get_bot_start()
+            print(datetime.now(), 'Бот работает, жду 10 секунд...')
             time.sleep(10)
-            print('Бот работает, жду 10 секунд...')
 
     elif args.buy:
         buy_coin(args.buy, args.usd)
