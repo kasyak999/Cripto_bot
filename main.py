@@ -1,8 +1,9 @@
 import sys
 from app.config import args, logger
 from app.comand import (
-    get_balance, get_coin_price, buy_coin, sell_coin,
-    cycle_coin_price)
+    get_balance, get_add_coin, buy_coin, sell_coin,
+    cycle_coin_price,
+    get_info_coin)
 
 
 if __name__ == '__main__':
@@ -16,8 +17,11 @@ if __name__ == '__main__':
 
     if args.balance:
         get_balance()
-    elif args.price:
-        get_coin_price(args.price)
+    elif args.info:
+        get_info_coin(args.info)
+    elif args.add:
+        get_add_coin(args.add)
+
     elif args.buy:
         buy_coin(args.buy, args.sum)
     elif args.unbuy:

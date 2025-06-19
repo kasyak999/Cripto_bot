@@ -24,14 +24,7 @@ session = HTTP(
     demo=DEMO
 )
 
-
-class MyArgumentParser(argparse.ArgumentParser):
-    """ Ошибка при неправильной команде """
-    def error(self, message):
-        self.print_help()
-
-
-parser = MyArgumentParser(description='Биржа')
+parser = argparse.ArgumentParser(description='Биржа')
 parser.add_argument(
     '-b',
     '--balance',
@@ -39,16 +32,24 @@ parser.add_argument(
     action='store_true',
 )
 parser.add_argument(
-    '-p',
-    '--price',
-    help='Узнать cтоимость монеты и обноаить данные о покупке'
+    '-i',
+    '--info',
+    help='Узнать cтоимость монеты и лимиты'
 )
+parser.add_argument(
+    '-a',
+    '--add',
+    help='Добавить монету или обновить'
+)
+
 parser.add_argument(
     '-c',
     '--cycle',
     help='Проверять стоимость монеты в цикле',
     action='store_true'
 )
+
+
 parser.add_argument(
     '-buy',
     '--buy',
@@ -59,7 +60,6 @@ parser.add_argument(
     '--unbuy',
     help='Продать монету'
 )
-
 parser.add_argument(
     '-s',
     '--sum',

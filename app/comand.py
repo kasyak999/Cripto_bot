@@ -23,8 +23,8 @@ def get_balance():
             # pprint(coin)
 
 
-def get_coin_price(symbol='BTCUSDT'):
-    """Получить цену монеты"""
+def get_info_coin(symbol='BTCUSDT'):
+    """Узнать cтоимость монеты и лимиты"""
     ticker = validate_symbol(session, symbol)
     if not ticker:
         return
@@ -32,21 +32,32 @@ def get_coin_price(symbol='BTCUSDT'):
     info = session.get_instruments_info(category="spot", symbol=symbol)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
-    logger.info(ticker['symbol'])
-    logger.info(f'Рыночная цена: {ticker["lastPrice"]} USDT')
-    logger.info(
+    result = (
+        f'--- Информация о {ticker['symbol']}---\n'
+        f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
         f'Минимальный ордер: {min_order_usdt} USDT или '
-        f'{min_order_coin} {ticker['symbol']}')
+        f'{min_order_coin} {ticker['symbol']}'
+    )
+    logger.info(result)
+    # pprint(ticker)
+    return {
+        'lastPrice': ticker["lastPrice"],
+        'min_usdt': min_order_usdt,
+        'min_coin': min_order_coin,
+    }
+
+
+def get_add_coin(symbol='BTCUSDT'):
+    """Добавить монету или обновить входную стоимость"""
+    ticker = get_info_coin(symbol)
 
     balance = balance_coin(session, symbol)
     if not balance:
-        logger.error(f'❌ Монета {symbol} не найдена в балансе')
-        return
+        balance = {'usdValue': 0}
 
     result = sessionDB.execute(
         select(Coin.name).where(Coin.name == symbol)
     ).first()
-
     if result is None:
         result = sessionDB.add(Coin(
             name=symbol,
@@ -65,7 +76,7 @@ def get_coin_price(symbol='BTCUSDT'):
         )
         sessionDB.commit()
         logger.info(
-            '🔄 Стоимость и баланс обновлен')
+            '🔄 Входная стоимость монеты обновлена')
 
 
 def cycle_coin_price():
