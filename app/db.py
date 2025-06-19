@@ -27,9 +27,3 @@ class Coin(Base):
 engine = create_engine('sqlite:///sqlite.db')  # echo=True логи
 Base.metadata.create_all(engine)
 sessionDB = Session(engine)
-
-# pep8 = Coin(
-#     name='TON',
-# )
-# session.add(pep8)
-# session.commit()

@@ -43,9 +43,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-c',
-    '--cycle',
-    help='Проверять стоимость монеты в цикле',
+    '-s',
+    '--start',
+    help='Запуск бота',
     action='store_true'
 )
 
@@ -61,8 +61,8 @@ parser.add_argument(
     help='Продать монету'
 )
 parser.add_argument(
-    '-s',
-    '--sum',
+    '-u',
+    '--usd',
     type=int,
     help='На сколько USDT продать или купить монету',
 )

@@ -3,11 +3,13 @@ from sqlalchemy import select, update
 
 from app.config import session, logger
 from app.db import sessionDB, Coin
-from app.validators import validate_symbol, count_decimal_places, balance_coin
+from app.service import validate_symbol, count_decimal_places, balance_coin
 
 
-COMMISSION = 0.999  # Комиссия 0.1% на покупку
-PROCENT = 0.95  # Процент для покупки/продажи 0.95 - 5%
+COMMISSION = 0.999  # Комиссия на покупку 0.1% (по умолчанию 0.999)
+PROCENT_BUY = 0.998  # Сумма - 5% (по умолчанию 0.95)
+PROCENT_SELL = 1.05  # Сумма + 5% (по умолчанию 1.05)
+PROCENT = 0.05  # 5% от суммы (по умолчанию 0.05)
 
 
 def get_balance():
@@ -38,18 +40,19 @@ def get_info_coin(symbol='BTCUSDT'):
         f'Минимальный ордер: {min_order_usdt} USDT или '
         f'{min_order_coin} {ticker['symbol']}'
     )
-    logger.info(result)
     # pprint(ticker)
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
         'min_coin': min_order_coin,
+        'info': result
     }
 
 
 def get_add_coin(symbol='BTCUSDT'):
     """Добавить монету или обновить входную стоимость"""
     ticker = get_info_coin(symbol)
+    logger.info(ticker['info'])
 
     balance = balance_coin(session, symbol)
     if not balance:
@@ -79,23 +82,25 @@ def get_add_coin(symbol='BTCUSDT'):
             '🔄 Входная стоимость монеты обновлена')
 
 
-def cycle_coin_price():
-    """Проверка цены монеты в цикле"""
+def get_bot_start():
+    """Запуск бота"""
     result = sessionDB.execute(select(Coin)).scalars().all()
     for coin in result:
-        ticker = validate_symbol(session, coin.name)
-        ticker = ticker['result']['list'][0]
+        ticker = get_info_coin(coin.name)
 
         print('')
         print('цена покупки', coin.price_buy)
-        print('покупка - 5%', coin.price_buy * PROCENT)
+        print('покупка - 5%', coin.price_buy * PROCENT_BUY)
         print('рыночная', ticker["lastPrice"])
         print('Всего в USDT', coin.balance)
 
-        if float(ticker["lastPrice"]) > (coin.price_buy * PROCENT):
+        if float(ticker["lastPrice"]) > (coin.price_buy * PROCENT_BUY):
+            print('не покупать')
             continue
-        buy_coin_usdt = round(coin.balance * 0.05)  # надо подумать
-        buy_coin(coin.name, buy_coin_usdt)
+        print('покупать')
+        # buy_coin_usdt = round(coin.balance * 0.05)  # надо подумать
+        # buy_coin(coin.name, buy_coin_usdt)
+        # не прадовать если нет баланса, нужно дописать
 
 
 def buy_coin(symbol, price):
