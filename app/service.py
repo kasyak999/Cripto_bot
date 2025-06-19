@@ -20,6 +20,7 @@ def count_decimal_places(value):
 
 
 def balance_coin(session, symbol):
+    """Получить баланс монеты"""
     response = session.get_wallet_balance(accountType="UNIFIED")
     response = response['result']['list'][0]['coin']
     coin_name = symbol.replace("USDT", "")

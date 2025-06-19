@@ -10,8 +10,9 @@ if __name__ == '__main__':
         logger.error(
             '⚠️  Не введена ни одна команда.\n'
             'Используйте -h или --help для справки.')
-    if (args.buy or args.unbuy) and args.sum is None:
-        logger.error("--sum обязательно при использовании --unbuy")
+    if (args.buy or args.unbuy) and args.usd is None:
+        logger.error(
+            "--usd обязательно при использовании --unbuy или --buy")
         sys.exit(1)
 
     if args.balance:
@@ -25,6 +26,6 @@ if __name__ == '__main__':
         get_bot_start()
 
     elif args.buy:
-        buy_coin(args.buy, args.sum)
+        buy_coin(args.buy, args.usd)
     elif args.unbuy:
-        sell_coin(args.unbuy, args.sum)
+        sell_coin(args.unbuy, args.usd)
