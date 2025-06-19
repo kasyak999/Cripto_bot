@@ -5,3 +5,4 @@ venv/
 python.py
 123.py
 sqlite.db
+log.log

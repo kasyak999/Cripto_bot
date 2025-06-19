@@ -17,6 +17,11 @@ logger.add(
     sys.stdout,
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
     level="INFO")
+logger.add(
+    "log.log",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    level="INFO"
+)
 
 session = HTTP(
     api_key=API_KEY,

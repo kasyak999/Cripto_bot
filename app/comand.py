@@ -99,12 +99,13 @@ def get_bot_start():
         ticker = get_info_coin(coin.name)
 
         # ---------------------------
-        print('')
-        print('цена стартовая', coin.start)
-        print('цена покупки', coin.price_buy)
-        print('рыночная', ticker["lastPrice"])
-        print('Всего в USDT', coin.balance)
+        # print('')
+        # print('цена стартовая', coin.start)
+        # print('цена покупки', coin.price_buy)
+        # print('рыночная', ticker["lastPrice"])
+        # print('Всего в USDT', coin.balance)
         # ---------------------------
+
         current_price = float(ticker["lastPrice"])
         if coin.price_buy:
             if current_price > (coin.price_buy * PROCENT_BUY):
@@ -143,10 +144,13 @@ def buy_coin(symbol, price, action=False):
     except InvalidRequestError as e:
         logger.error(f'Ошибка при покупке монеты: {str(e)}')
     else:
+        ticker = ticker["result"]["list"][0]
+        logger.info(
+            f"✅ Куплено {symbol} на {price * COMMISSION} USDT"
+            f' по цене {ticker["lastPrice"]}')
         if not action:
             return
 
-        ticker = ticker["result"]["list"][0]
         balance = balance_coin(session, symbol)
         sessionDB.execute(
             update(Coin).where(
@@ -155,8 +159,6 @@ def buy_coin(symbol, price, action=False):
                 price_buy=ticker["lastPrice"],
                 balance=balance['usdValue']))
         sessionDB.commit()
-
-        logger.info(f"✅ Куплено {symbol} на {price * COMMISSION} USDT")
 
 
 def sell_coin(symbol, price):
