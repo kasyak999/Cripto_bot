@@ -5,7 +5,8 @@ from datetime import datetime
 from app.config import args, logger
 from app.comand import (
     get_balance, get_add_coin, buy_coin, sell_coin,
-    get_bot_start, get_info_coin)
+    get_bot_start, get_info_coin, list_coins)
+from app.db import sessionDB
 
 
 if __name__ == '__main__':
@@ -20,6 +21,8 @@ if __name__ == '__main__':
 
     if args.balance:
         get_balance()
+    elif args.list:
+        list_coins()
     elif args.info:
         result = get_info_coin(args.info)
         logger.info(result['info'])
@@ -27,11 +30,17 @@ if __name__ == '__main__':
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
-        get_balance()
-        while True:
-            get_bot_start()
-            print(datetime.now(), 'Бот работает, жду 10 секунд...')
-            time.sleep(10)
+        list_coins()
+        try:
+            while True:
+                get_bot_start()
+                print(datetime.now(), 'Бот работает, жду 10 секунд...')
+                time.sleep(10)
+        except KeyboardInterrupt:
+            logger.info('Остановка бота...')
+        finally:
+            sessionDB.close()
+            logger.info('Бот остановлен.')
 
     elif args.buy:
         buy_coin(args.buy, args.usd)

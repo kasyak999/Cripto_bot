@@ -33,7 +33,13 @@ parser = argparse.ArgumentParser(description='Биржа')
 parser.add_argument(
     '-b',
     '--balance',
-    help='Узнать баланс',
+    help='Узнать баланс всех монет',
+    action='store_true',
+)
+parser.add_argument(
+    '-ls',
+    '--list',
+    help='Список монет в базе данных',
     action='store_true',
 )
 parser.add_argument(

@@ -27,6 +27,18 @@ def get_balance():
             # pprint(coin)
 
 
+def list_coins():
+    """Получить список монет из базы данных"""
+    result = sessionDB.execute(
+        select(Coin)
+    ).scalars().all()
+    if not result:
+        logger.error('Нет монет в базе данных')
+        return
+    for coin in result:
+        logger.info(f'{coin.name} - {coin.balance} USDT ')
+
+
 def get_info_coin(symbol='BTCUSDT'):
     """Узнать cтоимость монеты и лимиты"""
     ticker = validate_symbol(session, symbol)
