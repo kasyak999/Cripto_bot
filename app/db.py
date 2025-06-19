@@ -14,6 +14,7 @@ Base = declarative_base(cls=PreBase)
 
 
 class Coin(Base):
+    # buy_start = Column(Float)
     price_buy = Column(Float)
     price_sale = Column(Float)
     name = Column(String(200), unique=True)

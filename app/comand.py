@@ -3,11 +3,11 @@ from sqlalchemy import select, update
 
 from app.config import session, logger
 from app.db import sessionDB, Coin
-from app.validators import validate_symbol, count_decimal_places
+from app.validators import validate_symbol, count_decimal_places, balance_coin
 
 
-COMMISSION = 0.999  # Комиссия 0.1%
-PROCENT = 0.999  # Процент для покупки/продажи
+COMMISSION = 0.999  # Комиссия 0.1% на покупку
+PROCENT = 0.95  # Процент для покупки/продажи 0.95 - 5%
 
 
 def get_balance():
@@ -38,13 +38,9 @@ def get_coin_price(symbol='BTCUSDT'):
         f'Минимальный ордер: {min_order_usdt} USDT или '
         f'{min_order_coin} {ticker['symbol']}')
 
-    response = session.get_wallet_balance(accountType="UNIFIED")
-    response = response['result']['list'][0]['coin']
-    coin_name = ticker['symbol'].replace("USDT", "")
-    balance = next(
-        (item for item in response if item["coin"] == coin_name), None)
+    balance = balance_coin(session, symbol)
     if not balance:
-        logger.error(f'❌ Монета {coin_name} не найдена в балансе')
+        logger.error(f'❌ Монета {symbol} не найдена в балансе')
         return
 
     result = sessionDB.execute(
@@ -83,11 +79,12 @@ def cycle_coin_price():
         print('цена покупки', coin.price_buy)
         print('покупка - 5%', coin.price_buy * PROCENT)
         print('рыночная', ticker["lastPrice"])
+        print('Всего в USDT', coin.balance)
 
-        if not float(ticker["lastPrice"]) <= (float(coin.price_buy) * PROCENT):
+        if float(ticker["lastPrice"]) > (coin.price_buy * PROCENT):
             continue
-
-        print('Столько всего', coin.balance, 'USD')
+        buy_coin_usdt = round(coin.balance * 0.05)  # надо подумать
+        buy_coin(coin.name, buy_coin_usdt)
 
 
 def buy_coin(symbol, price):
@@ -103,8 +100,17 @@ def buy_coin(symbol, price):
         orderType="Market",
         qty=str(price)
     )
-    result_buy = (price * COMMISSION) / float(ticker["lastPrice"])
-    logger.info(f"✅ Куплено {result_buy} {ticker['symbol']} на {price} USDT")
+    logger.info(f"✅ Куплено {ticker['symbol']} на {price * COMMISSION} USDT")
+
+    balance = balance_coin(session, symbol)
+    if balance:
+        sessionDB.execute(
+            update(Coin).where(
+                Coin.name == symbol
+            ).values(
+                price_buy=ticker["lastPrice"],
+                balance=balance['usdValue']))
+        sessionDB.commit()
 
 
 def sell_coin(symbol, price):
