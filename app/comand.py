@@ -1,11 +1,14 @@
 from pprint import pprint
+import decimal
+
 from sqlalchemy import select, update, delete
 
 from pybit.exceptions import InvalidRequestError
 
 from app.config import session, logger
 from app.db import sessionDB, Coin
-from app.service import validate_symbol, count_decimal_places, balance_coin
+from app.service import (
+    validate_symbol, count_decimal_places, balance_coin)
 
 
 COMMISSION = 0.999  # Комиссия на покупку 0.1% (по умолчанию 0.999)
@@ -47,13 +50,19 @@ def get_info_coin(symbol='BTCUSDT'):
         return
     ticker = ticker['result']['list'][0]
     info = session.get_instruments_info(category="spot", symbol=symbol)
+    # pprint(info)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
+
+    base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
+    base_precision = abs(decimal.Decimal(
+        str(base_precision)).as_tuple().exponent)
     # pprint(ticker)
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
         'min_coin': min_order_coin,
+        'base_precision': base_precision,
         'info': (
             f'--- Информация о {ticker['symbol']}---\n'
             f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
@@ -84,13 +93,18 @@ def get_add_coin(symbol='BTCUSDT'):
             balance=balance['walletBalance']
         )
         sessionDB.add(new_coin)
-        logger.info(f'✅ {symbol} добавлен в базу данных')
     else:
         result.start = float(ticker["lastPrice"])
         result.balance = balance['walletBalance']
-        logger.info(f'🔄 {symbol} обновлен в базе данных')
+
+    price = float(balance['walletBalance']) * PROCENT
+    if price < float(ticker['min_coin']):
+        logger.error(
+            f'❌ Нельзя добавить {symbol}, слишком маленький баланс')
+        return
 
     sessionDB.commit()
+    logger.info(f'✅ {symbol} добавлен/обновлен в базе данных')
 
 
 def get_bot_start():
@@ -99,6 +113,19 @@ def get_bot_start():
     for coin in result:
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
+        price_coin = coin.balance * PROCENT
+
+        if price_coin < float(ticker['min_coin']):
+            logger.error(
+                f'{coin.name} Сумма покупки {price_coin} меньше минимальной '
+                f'суммы {ticker["min_coin"]}')
+            sessionDB.execute(
+                delete(Coin).where(Coin.name == coin.name)
+            )
+            sessionDB.commit()
+            logger.error(f'❌ Удаляем из базы данных {coin.name}')
+            continue
+
 
         # usd_balance = round(coin.balance * PROCENT)
         # ---------------------------
@@ -115,21 +142,25 @@ def get_bot_start():
         else:
             buy_base = coin.price_buy if coin.price_buy else coin.start
             if current_price <= (buy_base * PROCENT_BUY):
-                price = coin.balance * PROCENT
-                if price < float(ticker['min_coin']):
-                    logger.error(
-                        f'Сумма покупки {price} меньше минимальной '
-                        f'суммы {ticker["min_coin"]}')
-                    sessionDB.execute(
-                        delete(Coin).where(Coin.name == coin.name)
-                    )
-                    sessionDB.commit()
-                    logger.error(f'❌ Удаляем из базы данных {coin.name}')
-                    continue
-
                 logger.info(f'Покупаем {coin.name}')
-                # buy_coin(coin.name, usd_balance, True)
 
+                print(ticker['base_precision'])
+                # print(price)
+
+                # qwe = (coin.balance * PROCENT) / current_price
+                price_usd = (coin.balance * PROCENT) * current_price
+                price_usd = round(price_usd, ticker['base_precision'])
+                price_usd = price_usd if not ticker['base_precision'] == 0 else int(price_usd)
+                print(price_usd)
+                # buy_coin(coin.name, price, True)
+                session.place_order(
+                    category="spot",
+                    symbol=coin.name,
+                    side="Buy",
+                    orderType="Market",
+                    qty=str(price_usd)
+                )
+                
 
 def buy_coin(symbol, price, action=False):
     """Купить монету"""
@@ -163,7 +194,7 @@ def buy_coin(symbol, price, action=False):
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
-            f"✅ Куплено {symbol} на {price * COMMISSION} USDT"
+            f"✅ Куплено {symbol} на {price * COMMISSION}"
             f' по цене {ticker["lastPrice"]}')
         if not action:
             return
@@ -173,7 +204,7 @@ def buy_coin(symbol, price, action=False):
                 Coin.name == symbol
             ).values(
                 price_buy=ticker["lastPrice"],
-                balance=balance['usdValue']))
+                balance=balance['walletBalance']))
         sessionDB.commit()
 
 
