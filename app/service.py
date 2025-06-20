@@ -26,4 +26,6 @@ def balance_coin(session, symbol):
     coin_name = symbol.replace("USDT", "")
     balance = next(
         (item for item in response if item["coin"] == coin_name), None)
+    if not balance:
+        logger.error(f'Нет баланса для {symbol}')
     return balance

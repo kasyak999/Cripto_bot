@@ -69,59 +69,49 @@ def get_add_coin(symbol='BTCUSDT'):
     ticker = get_info_coin(symbol)
     if not ticker:
         return
-    logger.info(ticker['info'])
 
     balance = balance_coin(session, symbol)
     if not balance:
-        balance = {'usdValue': 0}
+        return
 
     result = sessionDB.execute(
-        select(Coin.name).where(Coin.name == symbol)
-    ).first()
+        select(Coin).where(Coin.name == symbol)
+    ).scalar_one_or_none()
+
     if result is None:
-        result = sessionDB.add(Coin(
+        new_coin = Coin(
             name=symbol,
             start=ticker["lastPrice"],
-            balance=balance['usdValue']
-        ))
-        sessionDB.commit()
-        logger.info('✅ Монета добавлена в базу данных')
-    else:
-        result = sessionDB.execute(
-            update(Coin).where(
-                Coin.name == symbol
-            ).values(
-                start=ticker["lastPrice"],
-                balance=balance['usdValue'])
+            balance=balance['walletBalance']
         )
-        sessionDB.commit()
-        logger.info(
-            '🔄 Входная стоимость монеты обновлена')
+        sessionDB.add(new_coin)
+        logger.info(f'✅ {symbol} добавлен в базу данных')
+    else:
+        result.start = float(ticker["lastPrice"])
+        result.balance = balance['walletBalance']
+        logger.info(f'🔄 {symbol} обновлен в базе данных')
+
+    sessionDB.commit()
 
 
 def get_bot_start():
     """Запуск бота"""
     result = sessionDB.execute(select(Coin)).scalars().all()
     for coin in result:
-        if coin.balance == 0:
-            logger.error(f'Нет баланса для {coin.name}')
-            sessionDB.execute(
-                delete(Coin).where(Coin.name == coin.name)
-            )
-            sessionDB.commit()
-            continue
-
         ticker = get_info_coin(coin.name)
-        usd_balance = round(coin.balance * PROCENT)
-        coin_balance = 123
         current_price = float(ticker["lastPrice"])
+
+
+        # usd_balance = round(coin.balance * PROCENT)
+  
+
 
         # ---------------------------
         print('')
         print('Стартовая', coin.start)
         print('Цена покупки', coin.price_buy)
         print('Рыночная', ticker["lastPrice"])
-        print('Всего в USDT', coin.balance)
+        print(f'Всего {coin.name} - {coin.balance}')
         # print('+5%', coin.start * PROCENT_SELL)
         # print('-5%', current_price * PROCENT_BUY)
 
@@ -135,17 +125,13 @@ def get_bot_start():
         # ---------------------------
 
         if current_price >= (coin.start * PROCENT_SELL):
-            print('продаем монету', coin.name)
+            logger.info(f'Продаем {coin.name}')
             # sell_coin(coin.name, coin_balance, True)
         else:
             buy_base = coin.price_buy if coin.price_buy else coin.start
             if current_price <= (buy_base * PROCENT_BUY):
-                print('покупаем монету', coin.name)
+                logger.info(f'Покупаем {coin.name}')
                 # buy_coin(coin.name, usd_balance, True)
-
-        # logger.info(
-        #     f'Покупаем {coin.name} на {usd_balance} USDT '
-        #     f'по цене {ticker["lastPrice"]}')
 
 
 def buy_coin(symbol, price, action=False):
