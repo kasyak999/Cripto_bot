@@ -17,6 +17,7 @@ PROCENT = 0.05  # 5% от суммы (по умолчанию 0.05)
 def get_balance():
     """Получить список монет"""
     response = session.get_wallet_balance(accountType="UNIFIED")
+    # pprint(response)
     for value in response['result']['list']:
         for coin in value['coin']:
             logger.info(
