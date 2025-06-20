@@ -25,22 +25,24 @@ if __name__ == '__main__':
         list_coins()
     elif args.info:
         result = get_info_coin(args.info)
-        logger.info(result['info'])
+        if result:
+            logger.info(result['info'])
     elif args.add:
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
-        list_coins()
-        try:
-            while True:
-                get_bot_start()
-                print(datetime.now(), 'Бот работает, жду 10 секунд...')
-                time.sleep(10)
-        except KeyboardInterrupt:
-            logger.info('Остановка бота...')
-        finally:
-            sessionDB.close()
-            logger.info('Бот остановлен.')
+        # list_coins()
+        get_bot_start()
+        # try:
+        #     while True:
+        #         get_bot_start()
+        #         print(datetime.now(), 'Бот работает, жду 10 секунд...')
+        #         time.sleep(10)
+        # except KeyboardInterrupt:
+        #     logger.info('Остановка бота...')
+        # finally:
+        #     sessionDB.close()
+        #     logger.info('Бот остановлен.')
 
     elif args.buy:
         buy_coin(args.buy, args.usd)

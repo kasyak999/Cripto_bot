@@ -66,6 +66,8 @@ def get_info_coin(symbol='BTCUSDT'):
 def get_add_coin(symbol='BTCUSDT'):
     """Добавить монету или обновить входную стоимость"""
     ticker = get_info_coin(symbol)
+    if not ticker:
+        return
     logger.info(ticker['info'])
 
     balance = balance_coin(session, symbol)
@@ -111,11 +113,11 @@ def get_bot_start():
         ticker = get_info_coin(coin.name)
 
         # ---------------------------
-        # print('')
-        # print('цена стартовая', coin.start)
-        # print('цена покупки', coin.price_buy)
-        # print('рыночная', ticker["lastPrice"])
-        # print('Всего в USDT', coin.balance)
+        print('')
+        print('цена стартовая', coin.start)
+        print('цена покупки', coin.price_buy)
+        print('рыночная', ticker["lastPrice"])
+        print('Всего в USDT', coin.balance)
         # ---------------------------
 
         current_price = float(ticker["lastPrice"])
@@ -129,9 +131,6 @@ def get_bot_start():
                 continue
 
         buy_coin_usdt = round(coin.balance * PROCENT)
-        if buy_coin_usdt < float(ticker["min_usdt"]):
-            logger.error('Количество USDT для покупки меньше минимального')
-            continue
         logger.info(
             f'Покупаем {coin.name} на {buy_coin_usdt} USDT '
             f'по цене {ticker["lastPrice"]}')
@@ -144,7 +143,6 @@ def buy_coin(symbol, price, action=False):
     if not ticker:
         # Проверка символа на корректность
         return
-
     try:
         session.place_order(
             category="spot",
@@ -154,7 +152,20 @@ def buy_coin(symbol, price, action=False):
             qty=str(price)
         )
     except InvalidRequestError as e:
-        logger.error(f'Ошибка при покупке монеты: {str(e)}')
+        delete_coin = False
+        if "170140" in str(e):
+            delete_coin = True
+            logger.error("Сумма ордера меньше минимального значения.")
+        elif "170131" in str(e):
+            delete_coin = True
+            logger.error("Недостаточно средств на балансе для покупки.")
+        else:
+            logger.error(f'Ошибка при покупке монеты: {str(e)}')
+        if delete_coin:
+            sessionDB.execute(
+                delete(Coin).where(Coin.name == symbol)
+            )
+            sessionDB.commit()
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
@@ -162,7 +173,6 @@ def buy_coin(symbol, price, action=False):
             f' по цене {ticker["lastPrice"]}')
         if not action:
             return
-
         balance = balance_coin(session, symbol)
         sessionDB.execute(
             update(Coin).where(

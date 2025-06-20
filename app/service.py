@@ -7,9 +7,9 @@ def validate_symbol(session, symbol):
     try:
         ticker = session.get_tickers(category="spot", symbol=symbol)
         return ticker
-    except InvalidRequestError as e:
-        logger.error(f'Ошибка: {e}')
-        logger.error(f"Проверь символ {symbol}")
+    except InvalidRequestError:
+        logger.error(
+            f"{symbol} - такой монеты нет или она введена не правильно")
 
 
 def count_decimal_places(value):
