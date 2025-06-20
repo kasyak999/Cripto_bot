@@ -49,18 +49,17 @@ def get_info_coin(symbol='BTCUSDT'):
     info = session.get_instruments_info(category="spot", symbol=symbol)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
-    result = (
-        f'--- Информация о {ticker['symbol']}---\n'
-        f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
-        f'Минимальный ордер: {min_order_usdt} USDT или '
-        f'{min_order_coin} {ticker['symbol']}'
-    )
     # pprint(ticker)
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
         'min_coin': min_order_coin,
-        'info': result
+        'info': (
+            f'--- Информация о {ticker['symbol']}---\n'
+            f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
+            f'Минимальный ордер: {min_order_usdt} USDT или '
+            f'{min_order_coin} {ticker['symbol']}'
+        )
     }
 
 
@@ -101,27 +100,13 @@ def get_bot_start():
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
 
-
         # usd_balance = round(coin.balance * PROCENT)
-  
-
-
         # ---------------------------
         print('')
         print('Стартовая', coin.start)
         print('Цена покупки', coin.price_buy)
         print('Рыночная', ticker["lastPrice"])
         print(f'Всего {coin.name} - {coin.balance}')
-        # print('+5%', coin.start * PROCENT_SELL)
-        # print('-5%', current_price * PROCENT_BUY)
-
-        # print('price_buy', coin.price_buy)
-        # run_c = 106
-        # print('Рыночная', run_c)
-        # print('+5%', coin.start * PROCENT_SELL)
-        # print('start -5%', coin.start * PROCENT_BUY)
-        # print('price_buy -5%', coin.price_buy * PROCENT_BUY)
-        # current_price = run_c
         # ---------------------------
 
         if current_price >= (coin.start * PROCENT_SELL):
@@ -130,6 +115,18 @@ def get_bot_start():
         else:
             buy_base = coin.price_buy if coin.price_buy else coin.start
             if current_price <= (buy_base * PROCENT_BUY):
+                price = coin.balance * PROCENT
+                if price < float(ticker['min_coin']):
+                    logger.error(
+                        f'Сумма покупки {price} меньше минимальной '
+                        f'суммы {ticker["min_coin"]}')
+                    sessionDB.execute(
+                        delete(Coin).where(Coin.name == coin.name)
+                    )
+                    sessionDB.commit()
+                    logger.error(f'❌ Удаляем из базы данных {coin.name}')
+                    continue
+
                 logger.info(f'Покупаем {coin.name}')
                 # buy_coin(coin.name, usd_balance, True)
 
