@@ -21,3 +21,7 @@ API_KEY=публичный_ключ
 API_SECRET=секретный_ключ
 DEMO=True - демо режим / False - не демо
 ```
+
+### Софт
+1. python 3.13
+2. DBeaver Community
