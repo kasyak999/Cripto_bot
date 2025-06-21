@@ -18,7 +18,7 @@ class Coin(Base):
     price_buy = Column(Float)
     name = Column(String(200), unique=True)
     balance = Column(Float)
-    payback = Column(Integer, default=0)
+    payback = Column(Float, default=0)
     stop = Column(Boolean, default=False)
 
     def __repr__(self):

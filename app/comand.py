@@ -92,7 +92,9 @@ def get_add_coin(symbol='BTCUSDT'):
         new_coin = Coin(
             name=symbol,
             start=ticker["lastPrice"],
-            balance=balance['walletBalance']
+            balance=balance['walletBalance'],
+            payback=(
+                float(balance['walletBalance']) * float(ticker["lastPrice"]))
         )
         sessionDB.add(new_coin)
     else:
@@ -193,6 +195,7 @@ def buy_coin(symbol, price, action=False):
         balance = balance_coin(session, symbol)
         coin.price_buy = ticker["lastPrice"]
         coin.balance = balance['walletBalance']
+        # coin.payback += 
     sessionDB.commit()
 
 
@@ -226,4 +229,5 @@ def sell_coin(symbol, price, action=False):
         balance = balance_coin(session, symbol)
         coin.price_buy = None
         coin.balance = balance['walletBalance']
+        coin.payback -= price * float(ticker["lastPrice"])
     sessionDB.commit()
