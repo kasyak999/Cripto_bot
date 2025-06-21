@@ -215,7 +215,7 @@ def sell_coin(symbol, price, action=False):
         if not action:
             return
         balance = balance_coin(session, symbol)
-        coin.price_buy = None
         coin.balance = balance['walletBalance']
         coin.payback += price * float(ticker["lastPrice"])
+        coin.stop = True
     sessionDB.commit()
