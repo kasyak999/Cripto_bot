@@ -12,13 +12,6 @@ def validate_symbol(session, symbol):
             f"{symbol} - такой монеты нет или она введена не правильно")
 
 
-def count_decimal_places(value):
-    """ Подсчет количества знаков после запятой в числе """
-    if '.' in value:
-        return len(value.split('.')[-1])
-    return 0
-
-
 def balance_coin(session, symbol):
     """Получить баланс монеты"""
     response = session.get_wallet_balance(accountType="UNIFIED")
@@ -29,3 +22,15 @@ def balance_coin(session, symbol):
     if not balance:
         logger.error(f'Нет баланса для {symbol}')
     return balance
+
+
+def get_min_limit(price_usd: int, ticker: dict):
+    """ ПРоверка минимального лимита """
+    if price_usd < float(ticker['min_usdt']):
+        logger.error(
+            f'❌ {ticker['symbol']} Процент от покупки '
+            f'{price_usd} USDT, меньше минимального лимита '
+            f'{ticker["min_usdt"]} USDT'
+            '\nНужно добавить монет на баланс')
+        return True
+    return False

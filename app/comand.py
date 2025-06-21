@@ -8,7 +8,7 @@ from pybit.exceptions import InvalidRequestError
 from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import (
-    validate_symbol, count_decimal_places, balance_coin)
+    validate_symbol, balance_coin, get_min_limit)
 
 
 COMMISSION = 0.999  # Комиссия на покупку 0.1% (по умолчанию 0.999)
@@ -65,6 +65,7 @@ def get_info_coin(symbol='BTCUSDT'):
         'min_usdt': min_order_usdt,
         'min_coin': min_order_coin,
         'base_precision': base_precision,
+        'symbol': symbol,
         'info': (
             f'--- Информация о {ticker['symbol']}---\n'
             f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
@@ -89,26 +90,24 @@ def get_add_coin(symbol='BTCUSDT'):
     ).scalars().first()
 
     if result is None:
+        current_price = float(ticker["lastPrice"])
+        price_usd = int(
+            (float(balance['walletBalance']) * PROCENT) * current_price)
+        if get_min_limit(price_usd, ticker):
+            return
+
         new_coin = Coin(
             name=symbol,
             start=ticker["lastPrice"],
             balance=balance['walletBalance'],
-            payback=(
+            payback=-abs(
                 float(balance['walletBalance']) * float(ticker["lastPrice"]))
         )
         sessionDB.add(new_coin)
+        sessionDB.commit()
+        logger.info(f'✅ {symbol} добавлен в базу данных')
     else:
-        result.balance = balance['walletBalance']
-        result.stop = False
-
-    price = float(balance['walletBalance']) * PROCENT
-    if price < float(ticker['min_coin']):
-        logger.error(
-            f'❌ Нельзя добавить {symbol}, слишком маленький баланс')
-        return
-
-    sessionDB.commit()
-    logger.info(f'✅ {symbol} добавлен/обновлен в базе данных')
+        logger.error(f'{symbol} уже есть в базе данных')
 
 
 def get_bot_start():
@@ -123,22 +122,13 @@ def get_bot_start():
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
         price_usd = int((coin.balance * PROCENT) * current_price)
-        if price_usd < float(ticker['min_usdt']):
-            logger.error(
-                f'{coin.name} Сумма покупки {price_usd} меньше минимальной '
-                f'суммы {ticker["min_usdt"]}')
-            sessionDB.execute(
-                update(Coin).where(
-                    Coin.name == coin.name
-                ).values(
-                    stop=True))
 
+        if get_min_limit(price_usd, ticker):
+            sessionDB.execute(update(Coin).where(
+                Coin.name == coin.name).values(stop=True))
             sessionDB.commit()
-            logger.error(
-                f'❌ Останавливаем работу с {coin.name}.'
-                ' Нужно добавить монеты на баланс')
             continue
-        price_coin = round((coin.balance * PROCENT), ticker['base_precision'])
+        price_coin = round(coin.balance, ticker['base_precision'])
         price_coin = (
             int(price_coin) if ticker['base_precision'] == 0 else price_coin)
 
@@ -183,7 +173,6 @@ def buy_coin(symbol, price, action=False):
             coin.start = True
             logger.error("Недостаточно средств на балансе для покупки.")
         else:
-            coin.start = True
             logger.error(f'Ошибка при покупке монеты: {str(e)}')
     else:
         ticker = ticker["result"]["list"][0]
@@ -195,7 +184,7 @@ def buy_coin(symbol, price, action=False):
         balance = balance_coin(session, symbol)
         coin.price_buy = ticker["lastPrice"]
         coin.balance = balance['walletBalance']
-        # coin.payback += 
+        coin.payback += -abs(price)
     sessionDB.commit()
 
 
@@ -218,7 +207,6 @@ def sell_coin(symbol, price, action=False):
         )
     except InvalidRequestError as e:
         logger.error(f'Ошибка при продаже монеты: {str(e)}')
-        coin.stop = True
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
@@ -229,5 +217,5 @@ def sell_coin(symbol, price, action=False):
         balance = balance_coin(session, symbol)
         coin.price_buy = None
         coin.balance = balance['walletBalance']
-        coin.payback -= price * float(ticker["lastPrice"])
+        coin.payback += price * float(ticker["lastPrice"])
     sessionDB.commit()
