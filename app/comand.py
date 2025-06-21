@@ -113,12 +113,11 @@ def get_bot_start():
     for coin in result:
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
-        price_coin = coin.balance * PROCENT
-
-        if price_coin < float(ticker['min_coin']):
+        price_usd = int((coin.balance * PROCENT) * current_price)
+        if price_usd < float(ticker['min_usdt']):
             logger.error(
-                f'{coin.name} Сумма покупки {price_coin} меньше минимальной '
-                f'суммы {ticker["min_coin"]}')
+                f'{coin.name} Сумма покупки {price_usd} меньше минимальной '
+                f'суммы {ticker["min_usdt"]}')
             sessionDB.execute(
                 delete(Coin).where(Coin.name == coin.name)
             )
@@ -126,8 +125,6 @@ def get_bot_start():
             logger.error(f'❌ Удаляем из базы данных {coin.name}')
             continue
 
-
-        # usd_balance = round(coin.balance * PROCENT)
         # ---------------------------
         print('')
         print('Стартовая', coin.start)
@@ -143,24 +140,8 @@ def get_bot_start():
             buy_base = coin.price_buy if coin.price_buy else coin.start
             if current_price <= (buy_base * PROCENT_BUY):
                 logger.info(f'Покупаем {coin.name}')
+                buy_coin(coin.name, price_usd, True)
 
-                print(ticker['base_precision'])
-                # print(price)
-
-                # qwe = (coin.balance * PROCENT) / current_price
-                price_usd = (coin.balance * PROCENT) * current_price
-                price_usd = round(price_usd, ticker['base_precision'])
-                price_usd = price_usd if not ticker['base_precision'] == 0 else int(price_usd)
-                print(price_usd)
-                # buy_coin(coin.name, price, True)
-                session.place_order(
-                    category="spot",
-                    symbol=coin.name,
-                    side="Buy",
-                    orderType="Market",
-                    qty=str(price_usd)
-                )
-                
 
 def buy_coin(symbol, price, action=False):
     """Купить монету"""
