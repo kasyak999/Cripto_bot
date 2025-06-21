@@ -34,7 +34,7 @@ def get_balance():
 def list_coins():
     """Получить список монет из базы данных"""
     result = sessionDB.execute(
-        select(Coin)
+        select(Coin).where(Coin.stop.is_(False))
     ).scalars().all()
     if not result:
         logger.error('Нет монет в базе данных')

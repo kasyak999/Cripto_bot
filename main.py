@@ -37,8 +37,9 @@ if __name__ == '__main__':
             while True:
                 if not get_bot_start():
                     break
-                print(datetime.now(), 'Бот работает, жду 10 секунд...')
-                time.sleep(5)
+                time_slip = 5 * 60
+                print(datetime.now(), f'Бот работает, жду {time_slip} секунд...')
+                time.sleep(time_slip)
         except KeyboardInterrupt:
             logger.info('Остановка бота...')
         finally:
