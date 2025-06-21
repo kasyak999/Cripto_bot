@@ -1,8 +1,7 @@
-from pprint import pprint
 import decimal
-
-from sqlalchemy import select, update, delete
-
+import math
+from pprint import pprint
+from sqlalchemy import select, update
 from pybit.exceptions import InvalidRequestError
 
 from app.config import session, logger
@@ -52,14 +51,11 @@ def get_info_coin(symbol='BTCUSDT'):
         return
     ticker = ticker['result']['list'][0]
     info = session.get_instruments_info(category="spot", symbol=symbol)
-    # pprint(info)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
-
     base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
     base_precision = abs(decimal.Decimal(
         str(base_precision)).as_tuple().exponent)
-    # pprint(ticker)
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
@@ -91,7 +87,7 @@ def get_add_coin(symbol='BTCUSDT'):
 
     if result is None:
         current_price = float(ticker["lastPrice"])
-        price_usd = int(
+        price_usd = math.ceil(
             (float(balance['walletBalance']) * PROCENT) * current_price)
         if get_min_limit(price_usd, ticker):
             return
@@ -121,7 +117,7 @@ def get_bot_start():
     for coin in result:
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
-        price_usd = int((coin.balance * PROCENT) * current_price)
+        price_usd = math.ceil((coin.balance * PROCENT) * current_price)
 
         if get_min_limit(price_usd, ticker):
             sessionDB.execute(update(Coin).where(
