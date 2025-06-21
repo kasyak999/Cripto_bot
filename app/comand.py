@@ -51,6 +51,7 @@ def get_info_coin(symbol='BTCUSDT'):
         return
     ticker = ticker['result']['list'][0]
     info = session.get_instruments_info(category="spot", symbol=symbol)
+    # pprint(info)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
     base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]

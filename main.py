@@ -9,6 +9,8 @@ from app.comand import (
 from app.db import sessionDB
 
 
+TIME_SLEEP = 1 * 60
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         logger.error(
@@ -37,9 +39,8 @@ if __name__ == '__main__':
             while True:
                 if not get_bot_start():
                     break
-                time_slip = 5 * 60
-                print(datetime.now(), f'Бот работает, жду {time_slip} секунд...')
-                time.sleep(time_slip)
+                print(datetime.now(), f'Бот работает, жду {TIME_SLEEP} секунд...')
+                time.sleep(TIME_SLEEP)
         except KeyboardInterrupt:
             logger.info('Остановка бота...')
         finally:
