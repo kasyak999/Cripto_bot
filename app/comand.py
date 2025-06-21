@@ -39,10 +39,10 @@ def list_coins():
     if not result:
         logger.error('Нет монет в базе данных')
         return
+    result_log = 'Монеты в базе данных:\n'
     for coin in result:
-        logger.info(
-            'Монеты в базе данных:\n'
-            f'{coin.name} - {coin.balance} USDT ')
+        result_log += f'{coin.name} - {coin.balance} USDT\n'
+    logger.info(result_log)
 
 
 def get_info_coin(symbol='BTCUSDT'):
@@ -133,11 +133,11 @@ def get_bot_start():
             int(price_coin) if ticker['base_precision'] == 0 else price_coin)
 
         # ---------------------------
-        print('')
-        print('Стартовая', coin.start)
-        print('Цена покупки', coin.price_buy)
-        print('Рыночная', ticker["lastPrice"])
-        print(f'Всего {coin.name} - {coin.balance}')
+        # print('')
+        # print('Стартовая', coin.start)
+        # print('Цена покупки', coin.price_buy)
+        # print('Рыночная', ticker["lastPrice"])
+        # print(f'Всего {coin.name} - {coin.balance}')
         # ---------------------------
 
         if current_price >= (coin.start * PROCENT_SELL):
@@ -170,7 +170,8 @@ def buy_coin(symbol, price, action=False):
         )
     except InvalidRequestError as e:
         if "170131" in str(e):
-            coin.start = True
+            if action:
+                coin.start = True
             logger.error("Недостаточно средств на балансе для покупки.")
         else:
             logger.error(f'Ошибка при покупке монеты: {str(e)}')
