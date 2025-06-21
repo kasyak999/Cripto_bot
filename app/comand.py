@@ -124,6 +124,7 @@ def get_bot_start():
             sessionDB.commit()
             logger.error(f'❌ Удаляем из базы данных {coin.name}')
             continue
+        price_coin = round((coin.balance * PROCENT), ticker['base_precision'])
 
         # ---------------------------
         print('')
@@ -135,7 +136,7 @@ def get_bot_start():
 
         if current_price >= (coin.start * PROCENT_SELL):
             logger.info(f'Продаем {coin.name}')
-            # sell_coin(coin.name, coin_balance, True)
+            sell_coin(coin.name, price_coin, True)
         else:
             buy_base = coin.price_buy if coin.price_buy else coin.start
             if current_price <= (buy_base * PROCENT_BUY):
@@ -159,10 +160,7 @@ def buy_coin(symbol, price, action=False):
         )
     except InvalidRequestError as e:
         delete_coin = False
-        if "170140" in str(e):
-            delete_coin = True
-            logger.error("Сумма ордера меньше минимального значения.")
-        elif "170131" in str(e):
+        if "170131" in str(e):
             delete_coin = True
             logger.error("Недостаточно средств на балансе для покупки.")
         else:
