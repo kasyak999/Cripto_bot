@@ -34,7 +34,6 @@ if __name__ == '__main__':
     elif args.start:
         logger.info('Запуск бота...')
         list_coins()
-        # get_bot_start()
         try:
             while True:
                 if not get_bot_start():

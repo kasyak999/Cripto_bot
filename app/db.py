@@ -25,6 +25,6 @@ class Coin(Base):
         return f'{self.name}'
 
 
-engine = create_engine('sqlite:///sqlite.db')  # echo=True логи
+engine = create_engine('sqlite:///db.sqlite3')  # echo=True логи
 Base.metadata.create_all(engine)
 sessionDB = Session(engine)
