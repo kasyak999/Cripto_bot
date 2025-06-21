@@ -31,18 +31,19 @@ if __name__ == '__main__':
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
-        # list_coins()
-        get_bot_start()
-        # try:
-        #     while True:
-        #         get_bot_start()
-        #         print(datetime.now(), 'Бот работает, жду 10 секунд...')
-        #         time.sleep(10)
-        # except KeyboardInterrupt:
-        #     logger.info('Остановка бота...')
-        # finally:
-        #     sessionDB.close()
-        #     logger.info('Бот остановлен.')
+        list_coins()
+        # get_bot_start()
+        try:
+            while True:
+                if not get_bot_start():
+                    break
+                print(datetime.now(), 'Бот работает, жду 10 секунд...')
+                time.sleep(5)
+        except KeyboardInterrupt:
+            logger.info('Остановка бота...')
+        finally:
+            sessionDB.close()
+            logger.info('Бот остановлен.')
 
     elif args.buy:
         buy_coin(args.buy, args.usd)

@@ -40,7 +40,9 @@ def list_coins():
         logger.error('Нет монет в базе данных')
         return
     for coin in result:
-        logger.info(f'{coin.name} - {coin.balance} USDT ')
+        logger.info(
+            'Монеты в базе данных:\n'
+            f'{coin.name} - {coin.balance} USDT ')
 
 
 def get_info_coin(symbol='BTCUSDT'):
@@ -84,7 +86,7 @@ def get_add_coin(symbol='BTCUSDT'):
 
     result = sessionDB.execute(
         select(Coin).where(Coin.name == symbol)
-    ).scalar_one_or_none()
+    ).scalars().first()
 
     if result is None:
         new_coin = Coin(
@@ -94,8 +96,8 @@ def get_add_coin(symbol='BTCUSDT'):
         )
         sessionDB.add(new_coin)
     else:
-        result.start = float(ticker["lastPrice"])
         result.balance = balance['walletBalance']
+        result.stop = False
 
     price = float(balance['walletBalance']) * PROCENT
     if price < float(ticker['min_coin']):
@@ -109,7 +111,12 @@ def get_add_coin(symbol='BTCUSDT'):
 
 def get_bot_start():
     """Запуск бота"""
-    result = sessionDB.execute(select(Coin)).scalars().all()
+    result = sessionDB.execute(
+        select(Coin).where(Coin.stop.is_(False))).scalars().all()
+    if not result:
+        logger.error('❌ В базе данных нет активных монет. ')
+        return False
+
     for coin in result:
         ticker = get_info_coin(coin.name)
         current_price = float(ticker["lastPrice"])
@@ -119,10 +126,15 @@ def get_bot_start():
                 f'{coin.name} Сумма покупки {price_usd} меньше минимальной '
                 f'суммы {ticker["min_usdt"]}')
             sessionDB.execute(
-                delete(Coin).where(Coin.name == coin.name)
-            )
+                update(Coin).where(
+                    Coin.name == coin.name
+                ).values(
+                    stop=True))
+
             sessionDB.commit()
-            logger.error(f'❌ Удаляем из базы данных {coin.name}')
+            logger.error(
+                f'❌ Останавливаем работу с {coin.name}.'
+                ' Нужно добавить монеты на баланс')
             continue
         price_coin = round((coin.balance * PROCENT), ticker['base_precision'])
         price_coin = (
@@ -144,6 +156,7 @@ def get_bot_start():
             if current_price <= (buy_base * PROCENT_BUY):
                 logger.info(f'Покупаем {coin.name}')
                 buy_coin(coin.name, price_usd, True)
+    return True
 
 
 def buy_coin(symbol, price, action=False):
@@ -152,6 +165,9 @@ def buy_coin(symbol, price, action=False):
     if not ticker:
         # Проверка символа на корректность
         return
+    coin = sessionDB.execute(
+        select(Coin).where(Coin.name == symbol)
+    ).scalars().first()
     try:
         session.place_order(
             category="spot",
@@ -161,17 +177,12 @@ def buy_coin(symbol, price, action=False):
             qty=str(price)
         )
     except InvalidRequestError as e:
-        delete_coin = False
         if "170131" in str(e):
-            delete_coin = True
+            coin.start = True
             logger.error("Недостаточно средств на балансе для покупки.")
         else:
+            coin.start = True
             logger.error(f'Ошибка при покупке монеты: {str(e)}')
-        if delete_coin:
-            sessionDB.execute(
-                delete(Coin).where(Coin.name == symbol)
-            )
-            sessionDB.commit()
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
@@ -180,13 +191,9 @@ def buy_coin(symbol, price, action=False):
         if not action:
             return
         balance = balance_coin(session, symbol)
-        sessionDB.execute(
-            update(Coin).where(
-                Coin.name == symbol
-            ).values(
-                price_buy=ticker["lastPrice"],
-                balance=balance['walletBalance']))
-        sessionDB.commit()
+        coin.price_buy = ticker["lastPrice"]
+        coin.balance = balance['walletBalance']
+    sessionDB.commit()
 
 
 def sell_coin(symbol, price, action=False):
@@ -195,6 +202,9 @@ def sell_coin(symbol, price, action=False):
     if not ticker:
         # Проверка символа на корректность
         return
+    coin = sessionDB.execute(
+        select(Coin).where(Coin.name == symbol)
+    ).scalars().first()
     try:
         session.place_order(
             category="spot",
@@ -204,17 +214,8 @@ def sell_coin(symbol, price, action=False):
             qty=str(price)
         )
     except InvalidRequestError as e:
-        delete_coin = False
-        if "170131" in str(e):
-            delete_coin = True
-            logger.error("Недостаточно средств на балансе для покупки.")
-        else:
-            logger.error(f'Ошибка при продаже монеты: {str(e)}')
-        if delete_coin:
-            sessionDB.execute(
-                delete(Coin).where(Coin.name == symbol)
-            )
-            sessionDB.commit()
+        logger.error(f'Ошибка при продаже монеты: {str(e)}')
+        coin.stop = True
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
@@ -223,10 +224,6 @@ def sell_coin(symbol, price, action=False):
         if not action:
             return
         balance = balance_coin(session, symbol)
-        sessionDB.execute(
-            update(Coin).where(
-                Coin.name == symbol
-            ).values(
-                price_sale=ticker["lastPrice"],
-                balance=balance['walletBalance']))
-        sessionDB.commit()
+        coin.price_buy = None
+        coin.balance = balance['walletBalance']
+    sessionDB.commit()

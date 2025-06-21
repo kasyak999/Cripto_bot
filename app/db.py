@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Boolean
 from sqlalchemy.orm import declared_attr, declarative_base, Session
 
 
@@ -16,10 +16,10 @@ Base = declarative_base(cls=PreBase)
 class Coin(Base):
     start = Column(Float)
     price_buy = Column(Float)
-    price_sale = Column(Float)
     name = Column(String(200), unique=True)
     balance = Column(Float)
     payback = Column(Integer, default=0)
+    stop = Column(Boolean, default=False)
 
     def __repr__(self):
         return f'{self.name}'
