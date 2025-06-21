@@ -125,6 +125,8 @@ def get_bot_start():
             logger.error(f'❌ Удаляем из базы данных {coin.name}')
             continue
         price_coin = round((coin.balance * PROCENT), ticker['base_precision'])
+        price_coin = (
+            int(price_coin) if ticker['base_precision'] == 0 else price_coin)
 
         # ---------------------------
         print('')
@@ -173,7 +175,7 @@ def buy_coin(symbol, price, action=False):
     else:
         ticker = ticker["result"]["list"][0]
         logger.info(
-            f"✅ Куплено {symbol} на {price * COMMISSION}"
+            f"✅ Куплено {symbol} на {price * COMMISSION} USDT"
             f' по цене {ticker["lastPrice"]}')
         if not action:
             return
@@ -189,26 +191,42 @@ def buy_coin(symbol, price, action=False):
 
 def sell_coin(symbol, price, action=False):
     """Продать монету"""
-    print('продаем монету', symbol, price)
-
-
-def sell_coin_false(symbol, price):
-    """Продать монету"""
     ticker = validate_symbol(session, symbol)
     if not ticker:
+        # Проверка символа на корректность
         return
-    # Узнаем сколько знаков после запятой можно продать
-    info = session.get_instruments_info(category="spot", symbol=symbol)
-    rounding = count_decimal_places(
-        info["result"]["list"][0]["lotSizeFilter"]['basePrecision'])
-    ticker = ticker["result"]["list"][0]
-    btc_qty = round(price / float(ticker["lastPrice"]), rounding)
-    session.place_order(
-        category="spot",
-        symbol=symbol,
-        side="Sell",
-        orderType="Market",
-        qty=str(btc_qty)
-    )
-    logger.info(
-        f"✅ Продано {btc_qty * COMMISSION} {ticker['symbol']} на {price} USDT")
+    try:
+        session.place_order(
+            category="spot",
+            symbol=symbol,
+            side="Sell",
+            orderType="Market",
+            qty=str(price)
+        )
+    except InvalidRequestError as e:
+        delete_coin = False
+        if "170131" in str(e):
+            delete_coin = True
+            logger.error("Недостаточно средств на балансе для покупки.")
+        else:
+            logger.error(f'Ошибка при продаже монеты: {str(e)}')
+        if delete_coin:
+            sessionDB.execute(
+                delete(Coin).where(Coin.name == symbol)
+            )
+            sessionDB.commit()
+    else:
+        ticker = ticker["result"]["list"][0]
+        logger.info(
+            f"✅ Продано {price} {symbol}"
+            f' по цене {ticker["lastPrice"]}')
+        if not action:
+            return
+        balance = balance_coin(session, symbol)
+        sessionDB.execute(
+            update(Coin).where(
+                Coin.name == symbol
+            ).values(
+                price_sale=ticker["lastPrice"],
+                balance=balance['walletBalance']))
+        sessionDB.commit()
