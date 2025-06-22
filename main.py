@@ -55,6 +55,5 @@ if __name__ == '__main__':
             sessionDB.close()
     elif args.buy:
         buy_coin(args.buy, args.usd)
-
     elif args.unbuy:
         sell_coin(args.unbuy, args.usd)
