@@ -29,20 +29,46 @@
 
 Расчеты [в exel](/calculations.xlsx)
 
-### Установка
-1. Создать виртуальное окружение
+### Софт для работы
+1. docker
+2. DBeaver Community
+
+### Установка и управление
+- Подготовка
+
+    1. Создать файл `.env`
+    2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
+- Установка
     ```
-    python -m venv venv
-    source venv/bin/activate
+    docker compose up
     ```
-2. Установить зависимости
+
+- Обновление
     ```
-    pip install -r requirements.txt
+    docker compose down
+    docker compose up --build 
     ```
-3. Заупуск
+
+- Настройка бота 
     ```
-    python main.py -h
+    docker compose exec bot python main.py -h
     ```
+
+- Запуск 
+    ```
+    docker compose exec -d bot python main.py -s
+    ```
+
+- Остановить бота
+    ```
+    docker compose exec bot kill <номер>
+    ```
+
+- Посмотреть <номер> для остановки
+    ```
+    docker compose exec bot ps aux
+    ```
+
 ### Файл .env
 ```
 API_KEY=публичный_ключ
@@ -52,34 +78,4 @@ DEMO_API_KEY=публичный_ключ_демо_режима (не обяза�
 DEMO_API_SECRET=секретный_ключ_демо_режима (не обязательно)
 
 COMPOSE_PROJECT_NAME=crypto
-```
-
-### Софт для работы
-1. docker
-2. DBeaver Community
-
-### Управление
-Установка
-```
-docker compose up --build 
-```
-
-Настройка бота 
-```
-docker compose exec bot python main.py -h
-```
-
-Запуск 
-```
-docker compose exec -d bot python main.py -s
-```
-
-Остановить бота
-```
-docker compose exec bot kill <номер>
-```
-
-Посмотреть <номер> для остановки
-```
-docker compose exec bot ps aux
 ```
