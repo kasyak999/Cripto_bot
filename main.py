@@ -33,7 +33,7 @@ if __name__ == '__main__':
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
-        list_coins()
+        # list_coins()
         try:
             while True:
                 if not get_bot_start():
