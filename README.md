@@ -54,7 +54,7 @@
     docker compose exec bot python main.py -h
     ```
 
-- Запуск 
+- Запуск в фоновом режиме
     ```
     docker compose exec -d bot python main.py -s
     ```
