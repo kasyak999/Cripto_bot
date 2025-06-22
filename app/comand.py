@@ -127,6 +127,9 @@ def get_bot_start():
         if float(ticker["lastPrice"]) >= (coin.start * PROCENT_SELL):
             logger.info(f'Продаем {coin.name}')
             price_coin = round(coin.balance, ticker['base_precision'])
+            price_coin = (
+                math.floor(coin.balance * 10**ticker['base_precision']))
+            price_coin = price_coin / 10**ticker['base_precision']
             if ticker['base_precision'] == 0:
                 price_coin = int(price_coin)
             sell_coin(coin.name, price_coin, True)
@@ -172,7 +175,7 @@ def buy_coin(symbol, price, action=False):
         balance = balance_coin(session, symbol)
         coin.price_buy = ticker["lastPrice"]
         coin.balance = balance['walletBalance']
-        coin.payback += -abs(price)
+        coin.payback -= price
     sessionDB.commit()
 
 
