@@ -1,6 +1,7 @@
 import sys
 import time
 from datetime import datetime
+import requests.exceptions
 
 from app.config import args, logger
 from app.comand import (
@@ -10,6 +11,19 @@ from app.db import sessionDB
 
 
 TIME_SLEEP = 1 * 60
+
+
+def start_bot():
+    """ Запуск бота в цикле"""
+    while True:
+        try:
+            if not get_bot_start():
+                break
+        except requests.exceptions.ReadTimeout as e:
+            logger.error(f'❌ Ошибка при запросе к API: {e}')
+        print(datetime.now(), f'Бот работает, жду {TIME_SLEEP} секунд...')
+        time.sleep(TIME_SLEEP)
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
@@ -33,19 +47,12 @@ if __name__ == '__main__':
         get_add_coin(args.add)
     elif args.start:
         logger.info('Запуск бота...')
-        # list_coins()
         try:
-            while True:
-                if not get_bot_start():
-                    break
-                print(datetime.now(), f'Бот работает, жду {TIME_SLEEP} секунд...')
-                time.sleep(TIME_SLEEP)
+            start_bot()
         except KeyboardInterrupt:
             logger.info('Остановка бота...')
         finally:
             sessionDB.close()
-            logger.info('Бот остановлен.')
-
     elif args.buy:
         buy_coin(args.buy, args.usd)
 
