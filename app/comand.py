@@ -37,14 +37,21 @@ def get_balance():
 def list_coins():
     """Получить список монет из базы данных"""
     result = sessionDB.execute(
-        select(Coin).where(Coin.stop.is_(False))
-    ).scalars().all()
+        select(Coin)).scalars().all()
     if not result:
         logger.error('Нет монет в базе данных')
         return
     result_log = 'Монеты в базе данных:\n'
     for coin in result:
-        result_log += f'{coin.name} - {coin.balance} USDT\n'
+        price_buy = f'{coin.price_buy:.8f}' if coin.price_buy else None
+        result_log += f'''
+        -------- {coin.name} --------
+        Всего монет: {coin.balance:.8f}
+        Курс стартовой покупки: {coin.start:.8f}
+        Курс последней покупки: {price_buy}
+        Затраты: {coin.payback:.8f}
+        Отработано: {coin.stop}
+        '''
     logger.info(result_log)
 
 
