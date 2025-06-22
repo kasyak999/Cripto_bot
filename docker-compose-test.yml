@@ -3,7 +3,7 @@ volumes:
 
 services:
   bot:
-    image: kasyak999/ctypto_bot
+    build: ./
     env_file: .env
     volumes:
       - db_data:/bot/db

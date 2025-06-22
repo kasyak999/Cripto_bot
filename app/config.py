@@ -61,13 +61,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-y',
-    '--yes',
-    help='Для работы в контейнере',
-    action='store_true'
-)
-
-parser.add_argument(
     '-buy',
     '--buy',
     help='Купить монету'

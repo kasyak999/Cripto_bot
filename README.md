@@ -50,8 +50,36 @@ API_SECRET=секретный_ключ
 
 DEMO_API_KEY=публичный_ключ_демо_режима (не обязательно)
 DEMO_API_SECRET=секретный_ключ_демо_режима (не обязательно)
+
+COMPOSE_PROJECT_NAME=crypto
 ```
 
 ### Софт
 1. python 3.13
 2. DBeaver Community
+
+### Управление
+Установка
+```
+docker compose up --build 
+```
+
+Настройка бота 
+```
+docker compose exec bot bash
+```
+
+Запуск 
+```
+docker compose exec -d bot python main.py -s
+```
+
+Посмотреть запущеные скрипты
+```
+docker compose exec bot ps aux
+```
+
+Остановить бота
+```
+docker compose exec bot kill <номер>
+```
