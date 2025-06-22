@@ -59,7 +59,7 @@
     docker compose exec -d bot python main.py -s
     ```
 
-- Остановить бота
+- Остановить бота (если запущен в фоновом режиме)
     ```
     docker compose exec bot kill <номер>
     ```
