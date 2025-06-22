@@ -14,10 +14,8 @@ from app.service import (
 PROCENT_BUY = 0.95
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
 PROCENT_SELL = 1.05
-# Процент от баланса на которую будет покупаться монета 5%
-# (5% по умолчанию 0.05)
-PROCENT = 0.05
-
+# USDT на которую будет покупаться монета
+BUY_USDT = 5
 # Комиссия на покупку 0.1% (по умолчанию 0.999)
 COMMISSION = 0.999
 
@@ -93,10 +91,7 @@ def get_add_coin(symbol='BTCUSDT'):
     ).scalars().first()
 
     if result is None:
-        current_price = float(ticker["lastPrice"])
-        price_usd = math.ceil(
-            (float(balance['walletBalance']) * PROCENT) * current_price)
-        if get_min_limit(price_usd, ticker):
+        if get_min_limit(BUY_USDT, ticker):
             return
 
         new_coin = Coin(
@@ -123,34 +118,23 @@ def get_bot_start():
 
     for coin in result:
         ticker = get_info_coin(coin.name)
-        current_price = float(ticker["lastPrice"])
-        price_usd = math.ceil((coin.balance * PROCENT) * current_price)
-
-        if get_min_limit(price_usd, ticker):
+        if get_min_limit(BUY_USDT, ticker):
             sessionDB.execute(update(Coin).where(
                 Coin.name == coin.name).values(stop=True))
             sessionDB.commit()
             continue
-        price_coin = round(coin.balance, ticker['base_precision'])
-        price_coin = (
-            int(price_coin) if ticker['base_precision'] == 0 else price_coin)
 
-        # ---------------------------
-        # print('')
-        # print('Стартовая', coin.start)
-        # print('Цена покупки', coin.price_buy)
-        # print('Рыночная', ticker["lastPrice"])
-        # print(f'Всего {coin.name} - {coin.balance}')
-        # ---------------------------
-
-        if current_price >= (coin.start * PROCENT_SELL):
+        if float(ticker["lastPrice"]) >= (coin.start * PROCENT_SELL):
             logger.info(f'Продаем {coin.name}')
+            price_coin = round(coin.balance, ticker['base_precision'])
+            if ticker['base_precision'] == 0:
+                price_coin = int(price_coin)
             sell_coin(coin.name, price_coin, True)
         else:
-            buy_base = coin.price_buy if coin.price_buy else coin.start
-            if current_price <= (buy_base * PROCENT_BUY):
+            price_buy = coin.price_buy if coin.price_buy else coin.start
+            if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
                 logger.info(f'Покупаем {coin.name}')
-                buy_coin(coin.name, price_usd, True)
+                buy_coin(coin.name, BUY_USDT, True)
     return True
 
 
