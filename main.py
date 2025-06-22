@@ -57,3 +57,7 @@ if __name__ == '__main__':
         buy_coin(args.buy, args.usd)
     elif args.unbuy:
         sell_coin(args.unbuy, args.usd)
+    elif args.yes:
+        logger.info('Контейнер готов к работе')
+        while True:
+            time.sleep(60)

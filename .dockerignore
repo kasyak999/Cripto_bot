@@ -3,4 +3,6 @@ __pycache__/
 venv/
 .env
 log.log
-db.sqlite3
+docker-compose.yml
+Dockerfile
+**/db.sqlite3

@@ -1,0 +1,12 @@
+volumes:
+  db_data:
+
+services:
+  bot:
+    container_name: crypto
+    build: ./
+    env_file: .env
+    command: >
+      sh -c "python main.py -y"
+    volumes:
+      - db_data:/db

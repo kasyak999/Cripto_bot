@@ -60,6 +60,12 @@ parser.add_argument(
     action='store_true'
 )
 
+parser.add_argument(
+    '-y',
+    '--yes',
+    help='Для работы в контейнере',
+    action='store_true'
+)
 
 parser.add_argument(
     '-buy',
