@@ -33,16 +33,18 @@
 1. docker
 2. DBeaver Community (не обязательно)
 
-### Установка и управление
-- **Подготовка**
+## Установка
+### Подготовка
 
-    1. Создать файл `.env`
-    2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
+1. Создать файл `.env`
+2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
+3. Выполнить команду для установки образа
+    ```
+    docker compose up --build
+    ```
+4. Готово
 
-- Запуск docker compose
-    ```
-    docker compose up --build 
-    ```
+### Управление и настройка
 
 - Настройка бота 
     ```
@@ -80,16 +82,9 @@
     docker exec crypto-bot-1 ps aux
     ```
 
-- Остановка
-    ```
-    docker compose down
-    ```
-    или
+- Остановка и запуск контейнера
     ```
     docker stop crypto-bot-1
-    ```
-    Снова запустить 
-    ```
     docker start crypto-bot-1
     ```
 - Посмотреть логи
@@ -102,6 +97,10 @@
     docker exec -it crypto-bot-1 cat log.log
     ```
 
+- Удаление образа
+    ```
+    docker compose down
+    ```
 ### Файл .env
 ```
 # Демо-режим True / Ральный режим False
