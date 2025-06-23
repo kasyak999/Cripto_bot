@@ -48,6 +48,10 @@
     ```
     docker compose exec bot python main.py -h
     ```
+    или
+    ```
+    docker exec crypto-bot-1 python main.py -h
+    ```
 
 - Запуск в фоновом режиме
     ```
