@@ -1,7 +1,8 @@
+import os
 import decimal
 import math
 from pprint import pprint
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from pybit.exceptions import InvalidRequestError
 
 from app.config import session, logger
@@ -11,13 +12,13 @@ from app.service import (
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
-PROCENT_BUY = 0.95
+PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
-PROCENT_SELL = 1.05
+PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
 # USDT на которую будет покупаться монета
-BUY_USDT = 5
+BUY_USDT = int(os.getenv('BUY_USDT', '5'))
 # Комиссия на покупку 0.1% (по умолчанию 0.999)
-COMMISSION = 0.999
+COMMISSION = float(os.getenv('COMMISSION', '0.999'))
 
 
 def get_balance():
@@ -84,7 +85,7 @@ def get_info_coin(symbol='BTCUSDT'):
 
 
 def get_add_coin(symbol='BTCUSDT'):
-    """Добавить монету или обновить входную стоимость"""
+    """Добавить монету"""
     ticker = get_info_coin(symbol)
     if not ticker:
         return
@@ -217,3 +218,22 @@ def sell_coin(symbol, price, action=False):
         coin.payback += price * float(ticker["lastPrice"])
         coin.stop = True
     sessionDB.commit()
+
+
+def get_delete_coin(symbol):
+    """ Удалить монету из базы данных """
+
+    ticker = get_info_coin(symbol)
+    if not ticker:
+        return
+
+    result = sessionDB.execute(
+        select(Coin).where(Coin.name == symbol)
+    ).scalars().first()
+    if result is None:
+        logger.error(
+            f"{symbol} - такой монеты нет в базе данных")
+        return
+    sessionDB.delete(result)
+    sessionDB.commit()
+    logger.info(f"{symbol} - монета удалена из базы данных")

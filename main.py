@@ -6,7 +6,7 @@ import requests.exceptions
 from app.config import args, logger
 from app.comand import (
     get_balance, get_add_coin, buy_coin, sell_coin,
-    get_bot_start, get_info_coin, list_coins)
+    get_bot_start, get_info_coin, list_coins, get_delete_coin)
 from app.db import sessionDB
 
 
@@ -57,3 +57,5 @@ if __name__ == '__main__':
         buy_coin(args.buy, args.usd)
     elif args.unbuy:
         sell_coin(args.unbuy, args.usd)
+    elif args.delete:
+        get_delete_coin(args.delete)

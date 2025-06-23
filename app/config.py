@@ -8,7 +8,7 @@ import sys
 
 load_dotenv()
 
-DEMO = True  # Демо-режим True / Ральный режим False
+DEMO = bool(os.getenv('DEMO'))  # Демо-режим True / Ральный режим False
 API_KEY = os.getenv('DEMO_API_KEY') if DEMO else os.getenv('API_KEY')
 API_SECRET = os.getenv('DEMO_API_SECRET') if DEMO else os.getenv('API_SECRET')
 
@@ -50,7 +50,12 @@ parser.add_argument(
 parser.add_argument(
     '-a',
     '--add',
-    help='Добавить монету или обновить'
+    help='Добавить монету в базу данных'
+)
+parser.add_argument(
+    '-d',
+    '--delete',
+    help='Удалить монету из базы данных'
 )
 
 parser.add_argument(

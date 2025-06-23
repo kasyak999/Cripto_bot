@@ -38,14 +38,9 @@
 
     1. Создать файл `.env`
     2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
-- Установка
-    ```
-    docker compose up
-    ```
 
-- Обновление
+- Запуск docker compose
     ```
-    docker compose down
     docker compose up --build 
     ```
 
@@ -69,13 +64,31 @@
     docker compose exec bot ps aux
     ```
 
+- Остановка docker compose
+```
+docker compose down
+```
+
 ### Файл .env
 ```
+# Демо-режим True / Ральный режим False
+DEMO=False
+
 API_KEY=публичный_ключ
 API_SECRET=секретный_ключ
 
-DEMO_API_KEY=публичный_ключ_демо_режима (не обязательно)
-DEMO_API_SECRET=секретный_ключ_демо_режима (не обязательно)
-
 COMPOSE_PROJECT_NAME=crypto
+
+# ----- Не обязательные переменые -----
+# DEMO_API_KEY=публичный_ключ_демо_режима (не обязательно)
+# DEMO_API_SECRET=секретный_ключ_демо_режима (не обязательно)
+
+# Процент снижения для поуцпки -5% (по умолчанию 0.95)
+# PROCENT_BUY=0.95
+# Процент роста для продажи +5% (по умолчанию 1.05)
+# PROCENT_SELL=1.05
+# Количество USDT на которую будет покупаться монета
+# BUY_USDT=5
+# Комиссия на покупку 0.1% (по умолчанию 0.999)
+# COMMISSION=0.999
 ```
