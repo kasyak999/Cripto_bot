@@ -7,3 +7,7 @@ docker-compose.yml
 Dockerfile
 **/db.sqlite3
 docker-compose-test.yml
+
+info.png
+calculations.xlsx
+README.md
