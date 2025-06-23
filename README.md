@@ -31,10 +31,10 @@
 
 ### Софт для работы
 1. docker
-2. DBeaver Community
+2. DBeaver Community (не обязательно)
 
 ### Установка и управление
-- Подготовка
+- **Подготовка**
 
     1. Создать файл `.env`
     2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
