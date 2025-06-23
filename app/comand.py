@@ -25,14 +25,18 @@ def get_balance():
     """Получить список монет"""
     response = session.get_wallet_balance(accountType="UNIFIED")
     # pprint(response)
+    result = 'Кошелек:\n'
     for value in response['result']['list']:
         for coin in value['coin']:
-            print(
-                f'{coin['coin']} - {coin['walletBalance']}'
-                f' / USDT - {coin['usdValue']}'
-                # f'{coin['lastPrice']}'
+            result += (
+                f'''
+                -------- {coin['coin']} --------
+                Всего монет: {coin['walletBalance']}
+                Стоимость всех монет {coin['usdValue']} USD
+                '''
             )
             # pprint(coin)
+    print(result)
 
 
 def list_coins():
