@@ -32,8 +32,7 @@ if __name__ == '__main__':
             '⚠️  Не введена ни одна команда.\n'
             'Используйте -h или --help для справки.')
     if (args.buy or args.unbuy) and args.usd is None:
-        logger.error(
-            "--usd обязательно при использовании --unbuy или --buy")
+        print("--usd обязательно при использовании --unbuy или --buy")
         sys.exit(1)
 
     if args.balance:
@@ -43,7 +42,7 @@ if __name__ == '__main__':
     elif args.info:
         result = get_info_coin(args.info)
         if result:
-            logger.info(result['info'])
+            print(result['info'])
     elif args.add:
         get_add_coin(args.add)
     elif args.start:

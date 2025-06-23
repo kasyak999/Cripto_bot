@@ -27,7 +27,7 @@ def get_balance():
     # pprint(response)
     for value in response['result']['list']:
         for coin in value['coin']:
-            logger.info(
+            print(
                 f'{coin['coin']} - {coin['walletBalance']}'
                 f' / USDT - {coin['usdValue']}'
                 # f'{coin['lastPrice']}'
@@ -40,7 +40,7 @@ def list_coins():
     result = sessionDB.execute(
         select(Coin)).scalars().all()
     if not result:
-        logger.error('Нет монет в базе данных')
+        print('Нет монет в базе данных')
         return
     result_log = 'Монеты в базе данных:\n'
     for coin in result:
@@ -53,7 +53,7 @@ def list_coins():
         Затраты: {coin.payback:.8f}
         Отработано: {coin.stop}
         '''
-    logger.info(result_log)
+    print(result_log)
 
 
 def get_info_coin(symbol='BTCUSDT'):
@@ -113,7 +113,7 @@ def get_add_coin(symbol='BTCUSDT'):
         sessionDB.commit()
         logger.info(f'✅ {symbol} добавлен в базу данных')
     else:
-        logger.error(f'{symbol} уже есть в базе данных')
+        print(f'{symbol} уже есть в базе данных')
 
 
 def get_bot_start():
@@ -231,7 +231,7 @@ def get_delete_coin(symbol):
         select(Coin).where(Coin.name == symbol)
     ).scalars().first()
     if result is None:
-        logger.error(
+        print(
             f"{symbol} - такой монеты нет в базе данных")
         return
     sessionDB.delete(result)

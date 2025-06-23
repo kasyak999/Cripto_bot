@@ -8,7 +8,7 @@ def validate_symbol(session, symbol):
         ticker = session.get_tickers(category="spot", symbol=symbol)
         return ticker
     except InvalidRequestError:
-        logger.error(
+        print(
             f"{symbol} - такой монеты нет или она введена не правильно")
 
 
