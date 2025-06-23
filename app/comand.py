@@ -2,7 +2,7 @@ import os
 import decimal
 import math
 from pprint import pprint
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update
 from pybit.exceptions import InvalidRequestError
 
 from app.config import session, logger

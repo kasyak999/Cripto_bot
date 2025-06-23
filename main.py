@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 from datetime import datetime
@@ -10,7 +11,7 @@ from app.comand import (
 from app.db import sessionDB
 
 
-TIME_SLEEP = 1 * 60
+TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 60
 
 
 def start_bot():
@@ -21,7 +22,7 @@ def start_bot():
                 break
         except requests.exceptions.ReadTimeout as e:
             logger.error(f'❌ Ошибка при запросе к API: {e}')
-        print(datetime.now(), f'Бот работает, жду {TIME_SLEEP} секунд...')
+        print(f'{datetime.now()}: Бот работает, жду {TIME_SLEEP} секунд...')
         time.sleep(TIME_SLEEP)
 
 
