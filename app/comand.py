@@ -24,18 +24,20 @@ COMMISSION = float(os.getenv('COMMISSION', '0.999'))
 def get_balance():
     """Получить список монет"""
     response = session.get_wallet_balance(accountType="UNIFIED")
-    # pprint(response)
-    result = 'Кошелек:\n'
-    for value in response['result']['list']:
-        for coin in value['coin']:
-            result += (
-                f'''
-                -------- {coin['coin']} --------
-                Всего монет: {coin['walletBalance']}
-                Стоимость всех монет {coin['usdValue']} USD
-                '''
-            )
-            # pprint(coin)
+    response = response['result']['list'][0]['coin']
+    if not response:
+        print('💼 В портфеле пока нет монет.')
+        return
+    result = '💰 Ваш крипто-портфель:\n'
+    for value in response:
+        result += (
+            f'''
+            -------- 🪙  {value['coin']} --------
+            🔹 Баланс: {value['walletBalance']}
+            💵 Оценка в USD: {value['usdValue']}
+            '''
+        )
+        # pprint(coin)
     print(result)
 
 
@@ -44,18 +46,19 @@ def list_coins():
     result = sessionDB.execute(
         select(Coin)).scalars().all()
     if not result:
-        print('Нет монет в базе данных')
+        print('📦 В базе данных нет ни одной монеты.')
         return
-    result_log = 'Монеты в базе данных:\n'
+    result_log = '📊 Монеты, сохранённые в базе данных:\n'
     for coin in result:
         price_buy = f'{coin.price_buy:.8f}' if coin.price_buy else None
+        coin.stop = 'продана ✅' if coin.stop else 'в работе 🔄'
         result_log += f'''
-        -------- {coin.name} --------
-        Всего монет: {coin.balance:.8f}
-        Курс стартовой покупки: {coin.start:.8f}
-        Курс последней покупки: {price_buy}
-        Затраты: {coin.payback:.8f}
-        Отработано: {coin.stop}
+        -------- 🪙  {coin.name} --------
+        🔹 Баланс: {coin.balance:.8f}
+        💵 Курс стартовой покупки: {coin.start:.8f}
+        💵 Курс последней покупки: {price_buy}
+        💸 Затрачено: {coin.payback:.8f}
+        Статус: {coin.stop}
         '''
     print(result_log)
 
