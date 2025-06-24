@@ -8,7 +8,7 @@ import sys
 
 load_dotenv()
 
-DEMO = bool(os.getenv('DEMO'))  # Демо-режим True / Ральный режим False
+DEMO = True if os.getenv('DEMO') == 'true' else False
 API_KEY = os.getenv('DEMO_API_KEY') if DEMO else os.getenv('API_KEY')
 API_SECRET = os.getenv('DEMO_API_SECRET') if DEMO else os.getenv('API_SECRET')
 

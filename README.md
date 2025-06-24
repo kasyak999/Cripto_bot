@@ -101,8 +101,8 @@
     ```
 ## Файл .env
 ```
-# Демо-режим True / Ральный режим False
-DEMO=False
+# Демо-режим true / Ральный режим false
+DEMO=false
 
 API_KEY=публичный_ключ
 API_SECRET=секретный_ключ
