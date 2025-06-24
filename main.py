@@ -50,8 +50,9 @@ if __name__ == '__main__':
         try:
             start_bot()
         except KeyboardInterrupt:
-            logger.info('Остановка бота...')
+            pass
         finally:
+            logger.info('Остановка бота...')
             sessionDB.close()
     elif args.buy:
         buy_coin(args.buy, args.usd)
