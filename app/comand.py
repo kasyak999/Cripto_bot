@@ -244,3 +244,64 @@ def get_delete_coin(symbol):
     sessionDB.delete(result)
     sessionDB.commit()
     logger.info(f"{symbol} - монета удалена из базы данных")
+
+
+def get_update_coin(symbol, param):
+    """ Изменить монету в базе данных """
+
+    ticker = get_info_coin(symbol)
+    if not ticker:
+        return
+
+    result = sessionDB.execute(
+        select(Coin).where(Coin.name == symbol)
+    ).scalars().first()
+    if result is None:
+        print(
+            f"{symbol} - такой монеты нет в базе данных")
+        return
+
+    if 'help' in param:
+        print(
+            f'ℹ️  Доступные параметры для изменения монеты {symbol}:\n\n'
+            'start — курс первой (стартовой) покупки (пример: start=0.00123)\n'
+            'buy — курс последней покупки (пример: buy=0.00110)\n'
+            'pay — общая сумма затрат на покупку монеты (пример: pay=150.50)\n'
+            '\nПример использования: '
+            f'python main.py -e {symbol} -p start=0.00123 buy=0.00110\n'
+            'Можно указать только нужные параметры.')
+        return
+
+    param_dict = {
+        'start': None,
+        'buy': None,
+        'pay': None
+    }
+    for item in param:
+        if '=' not in item:
+            print(
+                f'❌ Некорректный параметр: "{item}". '
+                'Ожидается формат ключ=значение. Введите help для помощи')
+            return
+
+        key, value = item.split('=', 1)
+        if key not in param_dict:
+            print(
+                f'❌ Недопустимый ключ: "{key}". '
+                f'Разрешены только: {", ".join(param_dict.keys())}.')
+            return
+
+        try:
+            param_dict[key] = float(value)
+        except ValueError:
+            print(f'❌ Значение для "{key}" должно быть числом.')
+            return
+
+    if param_dict['start'] is not None:
+        result.start = param_dict['start']
+    if param_dict['buy'] is not None:
+        result.price_buy = param_dict['buy']
+    if param_dict['pay'] is not None:
+        result.payback = param_dict['pay']
+    sessionDB.commit()
+    print(f'✅ Монета {symbol} успешно обновлена')
