@@ -45,17 +45,17 @@ parser.add_argument(
 parser.add_argument(
     '-i',
     '--info',
-    help='Узнать cтоимость монеты и лимиты. Пример: -info BTCUSDT'
+    help='Узнать cтоимость монеты и лимиты. Пример: --info BTCUSDT'
 )
 parser.add_argument(
     '-a',
     '--add',
-    help='Добавить монету в базу данных. Пример: -add BTCUSDT'
+    help='Добавить монету в базу данных. Пример: --add BTCUSDT'
 )
 parser.add_argument(
     '-d',
     '--delete',
-    help='Удалить монету из базы данных. Пример: -delete BTCUSDT'
+    help='Удалить монету из базы данных. Пример: --delete BTCUSDT'
 )
 
 parser.add_argument(
@@ -85,7 +85,7 @@ parser.add_argument(
 parser.add_argument(
     '-e',
     '--edit',
-    help='Изменить монету. Пример: -edit BTCUSDT -p help'
+    help='Изменить монету. Пример: --edit BTCUSDT --param help'
 )
 
 parser.add_argument(
