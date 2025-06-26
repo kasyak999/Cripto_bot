@@ -31,6 +31,12 @@ session = HTTP(
 
 parser = argparse.ArgumentParser(description='Биржа')
 parser.add_argument(
+    '-s',
+    '--start',
+    help='Запуск бота',
+    action='store_true'
+)
+parser.add_argument(
     '-b',
     '--balance',
     help='Узнать баланс всех монет',
@@ -45,48 +51,23 @@ parser.add_argument(
 parser.add_argument(
     '-i',
     '--info',
-    help='Узнать cтоимость монеты и лимиты. Пример: --info BTCUSDT'
+    help='Узнать cтоимость монеты и лимиты. Пример: -i BTCUSDT'
 )
 parser.add_argument(
     '-a',
     '--add',
-    help='Добавить монету в базу данных. Пример: --add BTCUSDT'
+    help='Добавить монету в базу данных. Пример: -a BTCUSDT'
 )
 parser.add_argument(
     '-d',
     '--delete',
-    help='Удалить монету из базы данных. Пример: --delete BTCUSDT'
+    help='Удалить монету из базы данных. Пример: -d BTCUSDT'
 )
-
-parser.add_argument(
-    '-s',
-    '--start',
-    help='Запуск бота',
-    action='store_true'
-)
-
-parser.add_argument(
-    '-buy',
-    '--buy',
-    help='Купить монету. Пример: -buy BTCUSDT -u 100'
-)
-parser.add_argument(
-    '-unbuy',
-    '--unbuy',
-    help='Продать монету. Пример: -unbuy BTCUSDT -u 100'
-)
-parser.add_argument(
-    '-u',
-    '--usd',
-    type=int,
-    help='На сколько USDT продать или купить монету',
-)
-
 parser.add_argument(
     '-e',
     '--edit',
     type=int,
-    help='Изменить монету. Пример: --edit <id> --param help'
+    help='Изменить монету. Пример: -e <id> -p help'
 )
 
 parser.add_argument(

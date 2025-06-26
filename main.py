@@ -36,7 +36,16 @@ if __name__ == '__main__':
         print("--usd обязательно при использовании --unbuy или --buy")
         sys.exit(1)
 
-    if args.balance:
+    if args.start:
+        logger.info('Запуск бота...')
+        try:
+            start_bot()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            logger.info('Остановка бота...')
+            sessionDB.close()
+    elif args.balance:
         get_balance()
     elif args.list:
         list_coins()
@@ -46,19 +55,6 @@ if __name__ == '__main__':
             print(result['info'])
     elif args.add:
         get_add_coin(args.add)
-    elif args.start:
-        logger.info('Запуск бота...')
-        try:
-            start_bot()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            logger.info('Остановка бота...')
-            sessionDB.close()
-    elif args.buy:
-        buy_coin(args.buy, args.usd)
-    elif args.unbuy:
-        sell_coin(args.unbuy, args.usd)
     elif args.delete:
         get_delete_coin(args.delete)
     elif args.edit:
