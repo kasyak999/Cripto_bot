@@ -73,6 +73,16 @@
     ```
     docker compose down
     ```
+
+- Проверить работу контейнера
+    ```
+    docker compose exec bot ps aux
+    ```
+    или
+    ```
+    docker exec -it crypto-bot-1 ps aux
+    ```
+
 ## Файл .env
 ```
 # Демо-режим true / Ральный режим false
