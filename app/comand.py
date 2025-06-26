@@ -92,8 +92,9 @@ def get_info_coin(symbol='BTCUSDT'):
     }
 
 
-def get_add_coin(symbol='BTCUSDT'):
+def get_add_coin(symbol):
     """Добавить монету"""
+    symbol = symbol.upper() + 'USDT'
     ticker = get_info_coin(symbol)
     if not ticker:
         return
@@ -128,9 +129,6 @@ def get_bot_start():
     """Запуск бота"""
     result = sessionDB.execute(
         select(Coin).where(Coin.stop.is_(False))).scalars().all()
-    if not result:
-        logger.error('❌ В базе данных нет активных монет. ')
-        return False
 
     for coin in result:
         ticker = get_info_coin(coin.name)
@@ -154,7 +152,6 @@ def get_bot_start():
             if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
                 logger.info(f'Покупаем {coin.name}')
                 buy_coin(coin.name, BUY_USDT)
-    return True
 
 
 def buy_coin(symbol, price):

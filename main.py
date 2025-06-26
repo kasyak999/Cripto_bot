@@ -6,9 +6,8 @@ import requests.exceptions
 
 from app.config import args, logger
 from app.comand import (
-    get_balance, get_add_coin, buy_coin, sell_coin,
-    get_bot_start, get_info_coin, list_coins, get_delete_coin,
-    get_update_coin)
+    get_balance, get_add_coin, get_bot_start, get_info_coin,
+    list_coins, get_delete_coin, get_update_coin)
 from app.db import sessionDB
 
 
@@ -19,8 +18,7 @@ def start_bot():
     """ Запуск бота в цикле"""
     while True:
         try:
-            if not get_bot_start():
-                break
+            get_bot_start()
         except requests.exceptions.ReadTimeout as e:
             logger.error(f'❌ Ошибка при запросе к API: {e}')
         print(f'{datetime.now()}: Бот работает, жду {TIME_SLEEP} секунд...')

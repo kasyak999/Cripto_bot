@@ -7,5 +7,7 @@ services:
     env_file: .env
     volumes:
       - db_data:/bot/db
-    stdin_open: true
-    tty: true
+    # stdin_open: true
+    # tty: true
+    command: >
+      sh -c "python main.py -s"
