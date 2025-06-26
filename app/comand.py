@@ -17,8 +17,8 @@ PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
 # USDT на которую будет покупаться монета
 BUY_USDT = int(os.getenv('BUY_USDT', '5'))
-# Комиссия на покупку 0.1% (по умолчанию 0.999)
-COMMISSION = float(os.getenv('COMMISSION', '0.999'))
+# Комиссия на покупку 0.1800% (по умолчанию 0.9982)
+COMMISSION = float(os.getenv('COMMISSION', '0.9982'))
 
 
 def get_balance():
