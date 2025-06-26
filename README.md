@@ -74,7 +74,7 @@
     docker compose down
     ```
 
-- Проверить работу контейнера
+- Проверить работу бота
     ```
     docker compose exec bot ps aux
     ```
