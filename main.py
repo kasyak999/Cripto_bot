@@ -32,9 +32,6 @@ if __name__ == '__main__':
         logger.error(
             '⚠️  Не введена ни одна команда.\n'
             'Используйте -h или --help для справки.')
-    if (args.buy or args.unbuy) and args.usd is None:
-        print("--usd обязательно при использовании --unbuy или --buy")
-        sys.exit(1)
 
     if args.start:
         logger.info('Запуск бота...')

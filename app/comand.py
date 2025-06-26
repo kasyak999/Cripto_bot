@@ -148,22 +148,22 @@ def get_bot_start():
             price_coin = price_coin / 10**ticker['base_precision']
             if ticker['base_precision'] == 0:
                 price_coin = int(price_coin)
-            sell_coin(coin.name, price_coin, True)
+            sell_coin(coin.name, price_coin)
         else:
             price_buy = coin.price_buy if coin.price_buy else coin.start
             if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
                 logger.info(f'Покупаем {coin.name}')
-                buy_coin(coin.name, BUY_USDT, True)
+                buy_coin(coin.name, BUY_USDT)
     return True
 
 
-def buy_coin(symbol, price, action=False):
+def buy_coin(symbol, price):
     """Купить монету"""
     ticker = validate_symbol(session, symbol)
     if not ticker:
         # Проверка символа на корректность
         return
-    coin = sessionDB.execute(
+    result = sessionDB.execute(
         select(Coin).where(Coin.name == symbol)
     ).scalars().first()
     try:
@@ -176,8 +176,7 @@ def buy_coin(symbol, price, action=False):
         )
     except InvalidRequestError as e:
         if "170131" in str(e):
-            if action:
-                coin.start = True
+            result.start = True
             logger.error("Недостаточно средств на балансе для покупки.")
         else:
             logger.error(f'Ошибка при покупке монеты: {str(e)}')
@@ -186,22 +185,20 @@ def buy_coin(symbol, price, action=False):
         logger.info(
             f"✅ Куплено {symbol} на {price * COMMISSION} USDT"
             f' по цене {ticker["lastPrice"]}')
-        if not action:
-            return
         balance = balance_coin(session, symbol)
-        coin.price_buy = ticker["lastPrice"]
-        coin.balance = balance['walletBalance']
-        coin.payback -= price
+        result.price_buy = ticker["lastPrice"]
+        result.balance = balance['walletBalance']
+        result.payback -= price
     sessionDB.commit()
 
 
-def sell_coin(symbol, price, action=False):
+def sell_coin(symbol, price):
     """Продать монету"""
     ticker = validate_symbol(session, symbol)
     if not ticker:
         # Проверка символа на корректность
         return
-    coin = sessionDB.execute(
+    result = sessionDB.execute(
         select(Coin).where(Coin.name == symbol)
     ).scalars().first()
     try:
@@ -219,32 +216,25 @@ def sell_coin(symbol, price, action=False):
         logger.info(
             f"✅ Продано {price} {symbol}"
             f' по цене {ticker["lastPrice"]}')
-        if not action:
-            return
         balance = balance_coin(session, symbol)
-        coin.balance = balance['walletBalance']
-        coin.payback += price * float(ticker["lastPrice"])
-        coin.stop = True
+        result.balance = balance['walletBalance']
+        result.payback += price * float(ticker["lastPrice"])
+        result.stop = True
     sessionDB.commit()
 
 
-def get_delete_coin(symbol):
+def get_delete_coin(id_coin):
     """ Удалить монету из базы данных """
-
-    ticker = get_info_coin(symbol)
-    if not ticker:
-        return
-
     result = sessionDB.execute(
-        select(Coin).where(Coin.name == symbol)
+        select(Coin).where(Coin.id == id_coin)
     ).scalars().first()
     if result is None:
         print(
-            f"{symbol} - такой монеты нет в базе данных")
+            f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
+    logger.info(f"{result.name} - монета удалена из базы данных")
     sessionDB.delete(result)
     sessionDB.commit()
-    logger.info(f"{symbol} - монета удалена из базы данных")
 
 
 def get_update_coin(id_coin, param):
