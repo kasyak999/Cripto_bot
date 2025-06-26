@@ -37,7 +37,7 @@
 2. Рядом сохранить файл [docker-compose.yml](/docker-compose.yml)
 3. Выполнить команду для установки образа
     ```
-    docker compose up --build
+    docker compose up --build -d
     ```
 4. Дополнительные настройки можно сделать в `.env`
 5. Готово
@@ -53,38 +53,6 @@
     docker exec crypto-bot-1 python main.py -h
     ```
 
-- Запуск в фоновом режиме
-    ```
-    docker compose exec -d bot python main.py -s
-    ```
-    или
-    ```
-    docker exec crypto-bot-1 nohup python main.py -s
-    ```
-
-- Остановить бота (если запущен в фоновом режиме)
-    ```
-    docker compose exec bot kill <номер>
-    ```
-    или
-    ```
-    docker exec crypto-bot-1 kill <номер>
-    ```
-
-- Посмотреть <номер> для остановки
-    ```
-    docker compose exec bot ps aux
-    ```
-    или
-    ```
-    docker exec crypto-bot-1 ps aux
-    ```
-
-- Остановка и запуск контейнера
-    ```
-    docker stop crypto-bot-1
-    docker start crypto-bot-1
-    ```
 - Посмотреть логи
 
     ```
@@ -93,6 +61,12 @@
     или
     ```
     docker exec -it crypto-bot-1 cat log.log
+    ```
+
+- Остановка и запуск контейнера
+    ```
+    docker stop crypto-bot-1
+    docker start crypto-bot-1
     ```
 
 - Удаление образа
