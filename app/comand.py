@@ -51,9 +51,10 @@ def list_coins():
     result_log = '📊 Монеты, сохранённые в базе данных:\n'
     for coin in result:
         price_buy = f'{coin.price_buy:.8f}' if coin.price_buy else None
-        coin.stop = 'продана ✅' if coin.stop else 'в работе 🔄'
+        coin.stop = 'остановлено ⛔️' if coin.stop else 'в работе 🔄'
         result_log += f'''
         -------- 🪙  {coin.name} --------
+        🆔 id: {coin.id}
         🔹 Баланс: {coin.balance:.8f}
         💵 Курс стартовой покупки: {coin.start:.8f}
         💵 Курс последней покупки: {price_buy}
@@ -246,36 +247,33 @@ def get_delete_coin(symbol):
     logger.info(f"{symbol} - монета удалена из базы данных")
 
 
-def get_update_coin(symbol, param):
+def get_update_coin(id, param):
     """ Изменить монету в базе данных """
-
-    ticker = get_info_coin(symbol)
-    if not ticker:
-        return
-
     result = sessionDB.execute(
-        select(Coin).where(Coin.name == symbol)
+        select(Coin).where(Coin.id == id)
     ).scalars().first()
     if result is None:
         print(
-            f"{symbol} - такой монеты нет в базе данных")
+            f"❌ Монетв с id {id} нет в базе данных")
         return
 
     if 'help' in param:
         print(
-            f'ℹ️  Доступные параметры для изменения монеты {symbol}:\n\n'
+            f'ℹ️  Доступные параметры для изменения монеты {result.name}:\n\n'
             'start — курс первой (стартовой) покупки (пример: start=0.00123)\n'
             'buy — курс последней покупки (пример: buy=0.00110)\n'
             'pay — общая сумма затрат на покупку монеты (пример: pay=150.50)\n'
+            'stop — 0 торговать или 1 остановить'
             '\nПример использования: '
-            f'python main.py -e {symbol} -p start=0.00123 buy=0.00110\n'
+            f'python main.py -e {id} -p start=0.00123 buy=0.00110\n'
             'Можно указать только нужные параметры.')
         return
 
     param_dict = {
         'start': None,
         'buy': None,
-        'pay': None
+        'pay': None,
+        'stop': None
     }
     for item in param:
         if '=' not in item:
@@ -303,5 +301,8 @@ def get_update_coin(symbol, param):
         result.price_buy = param_dict['buy']
     if param_dict['pay'] is not None:
         result.payback = param_dict['pay']
+    if param_dict['stop'] is not None:
+        param_dict['stop'] = False if int(param_dict['stop']) == 0 else True
+        result.stop = param_dict['stop']
     sessionDB.commit()
-    print(f'✅ Монета {symbol} успешно обновлена')
+    print(f'✅ Монета {result.name} успешно обновлена')

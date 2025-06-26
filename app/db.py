@@ -16,10 +16,10 @@ Base = declarative_base(cls=PreBase)
 class Coin(Base):
     start = Column(Float)
     price_buy = Column(Float)
-    name = Column(String(200), unique=True)
+    name = Column(String(200))
     balance = Column(Float)
     payback = Column(Float, default=0)
-    stop = Column(Boolean, default=False)
+    stop = Column(Boolean, default=True)
 
     def __repr__(self):
         return f'{self.name}'

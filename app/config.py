@@ -85,7 +85,8 @@ parser.add_argument(
 parser.add_argument(
     '-e',
     '--edit',
-    help='Изменить монету. Пример: --edit BTCUSDT --param help'
+    type=int,
+    help='Изменить монету. Пример: --edit <id> --param help'
 )
 
 parser.add_argument(

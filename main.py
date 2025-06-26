@@ -63,4 +63,3 @@ if __name__ == '__main__':
         get_delete_coin(args.delete)
     elif args.edit:
         get_update_coin(args.edit, args.param)
-
