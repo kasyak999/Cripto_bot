@@ -247,14 +247,14 @@ def get_delete_coin(symbol):
     logger.info(f"{symbol} - монета удалена из базы данных")
 
 
-def get_update_coin(id, param):
+def get_update_coin(id_coin, param):
     """ Изменить монету в базе данных """
     result = sessionDB.execute(
-        select(Coin).where(Coin.id == id)
+        select(Coin).where(Coin.id == id_coin)
     ).scalars().first()
     if result is None:
         print(
-            f"❌ Монетв с id {id} нет в базе данных")
+            f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
 
     if 'help' in param:
@@ -265,7 +265,7 @@ def get_update_coin(id, param):
             'pay — общая сумма затрат на покупку монеты (пример: pay=150.50)\n'
             'stop — 0 торговать или 1 остановить'
             '\nПример использования: '
-            f'python main.py -e {id} -p start=0.00123 buy=0.00110\n'
+            f'python main.py -e 1 -p start=0.00123 buy=0.00110\n'
             'Можно указать только нужные параметры.')
         return
 
