@@ -1,5 +1,6 @@
 from app.config import logger
 from pybit.exceptions import InvalidRequestError
+import decimal
 
 
 def validate_symbol(session, symbol):
@@ -24,13 +25,29 @@ def balance_coin(session, symbol):
     return balance
 
 
-def get_min_limit(price_usd: int, ticker: dict):
-    """ ПРоверка минимального лимита """
-    if price_usd < float(ticker['min_usdt']):
-        logger.error(
-            f'❌ {ticker['symbol']} Процент от покупки '
-            f'{price_usd} USDT, меньше минимального лимита '
-            f'{ticker["min_usdt"]} USDT'
-            '\nНужно добавить монет на баланс')
-        return True
-    return False
+def get_info_coin(session, symbol='BTCUSDT'):
+    """Узнать cтоимость монеты и лимиты"""
+    ticker = validate_symbol(session, symbol)
+    if not ticker:
+        return
+    ticker = ticker['result']['list'][0]
+    info = session.get_instruments_info(category="spot", symbol=symbol)
+    # pprint(info)
+    min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
+    min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
+    base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
+    base_precision = abs(decimal.Decimal(
+        str(base_precision)).as_tuple().exponent)
+    return {
+        'lastPrice': ticker["lastPrice"],
+        'min_usdt': min_order_usdt,
+        'min_coin': min_order_coin,
+        'base_precision': base_precision,
+        'symbol': symbol,
+        'info': (
+            f'--- Информация о {ticker['symbol']}---\n'
+            f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
+            f'Минимальный ордер: {min_order_usdt} USDT или '
+            f'{min_order_coin} {ticker['symbol']}'
+        )
+    }

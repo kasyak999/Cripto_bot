@@ -77,5 +77,11 @@ parser.add_argument(
     metavar='KEY=VALUE',
     help='Параметры',
 )
+parser.add_argument(
+    '-lo',
+    '--list_orders',
+    help='Получить список активных оредоров',
+    action='store_true',
+)
 
 args = parser.parse_args()

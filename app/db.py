@@ -14,11 +14,12 @@ Base = declarative_base(cls=PreBase)
 
 
 class Coin(Base):
-    start = Column(Float)
-    price_buy = Column(Float)
-    name = Column(String(200), unique=True)
-    balance = Column(Float)
-    payback = Column(Float, default=0)
+    name = Column(String(200), unique=True, doc="Название монеты")
+    balance = Column(Float, doc="Баланс")
+    average_price = Column(Float, doc="Средняя цена")
+    buy_price = Column(Float, doc="Цена покупки")
+    sell_price = Column(Float, doc="Цена продажи")
+    count_buy = Column(Integer, default=1, doc="Кол-во покупок")
     stop = Column(Boolean, default=True)
 
     def __repr__(self):
