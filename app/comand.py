@@ -97,9 +97,7 @@ def get_add_coin(symbol='BTCUSDT'):
         new_coin = Coin(
             name=symbol,
             start=ticker["lastPrice"],
-            balance=balance['walletBalance'],
-            payback=-abs(
-                float(balance['walletBalance']) * float(ticker["lastPrice"]))
+            balance=balance['walletBalance']
         )
         sessionDB.add(new_coin)
         sessionDB.commit()
@@ -139,6 +137,37 @@ def get_bot_start():
                 logger.info(f'Покупаем {coin.name}')
                 buy_coin(coin.name, BUY_USDT, True)
     return True
+
+
+def test_func():
+    """ Тестовая функция """
+    print('выставляем лимитный ордер')
+    # создать лимитный ордер
+    # order = session.place_order(
+    #     category="spot",          # спотовый рынок
+    #     symbol="BTCUSDT",         # торговая пара
+    #     side="Buy",               # "Buy" или "Sell"
+    #     orderType="Limit",       # лимитный ордер
+    #     qty=0.1,                # количество базовой валюты
+    #     price=100,              # цена лимитного ордера
+    # )
+
+
+    # # получить все ордеры
+    # orders = session.get_open_orders(
+    #     category="spot",         # или "linear" / "inverse"
+    # )
+    # # pprint(orders['result']['list'])
+    # for i in orders['result']['list']:
+    #     print(i['symbol'], i['orderId'])
+
+    # удалить ордер
+    cancel_result = session.cancel_order(
+        category="spot",              # "spot", "linear" или "inverse"
+        symbol="BTCUSDT",             # символ ордера
+        order_id="1991054721099762944"         # ID ордера, который нужно отменить
+    )
+    pprint(cancel_result)
 
 
 def buy_coin(symbol, price, action=False):

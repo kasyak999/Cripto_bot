@@ -77,4 +77,5 @@ parser.add_argument(
     type=int,
     help='На сколько USDT продать или купить монету',
 )
+
 args = parser.parse_args()

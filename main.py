@@ -5,8 +5,8 @@ import requests.exceptions
 
 from app.config import args, logger
 from app.comand import (
-    get_balance, get_add_coin, buy_coin, sell_coin,
-    get_bot_start, get_info_coin, list_coins)
+    get_balance, get_add_coin, get_bot_start, get_info_coin,
+    list_coins, get_delete_coin, get_update_coin)
 from app.db import sessionDB
 
 
@@ -45,16 +45,7 @@ if __name__ == '__main__':
             logger.info(result['info'])
     elif args.add:
         get_add_coin(args.add)
-    elif args.start:
-        logger.info('Запуск бота...')
-        try:
-            start_bot()
-        except KeyboardInterrupt:
-            logger.info('Остановка бота...')
-        finally:
-            sessionDB.close()
-    elif args.buy:
-        buy_coin(args.buy, args.usd)
-
-    elif args.unbuy:
-        sell_coin(args.unbuy, args.usd)
+    elif args.delete:
+        get_delete_coin(args.delete)
+    elif args.edit:
+        get_update_coin(args.edit, args.param)
