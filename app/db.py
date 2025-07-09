@@ -20,7 +20,9 @@ class Coin(Base):
     buy_price = Column(Float, doc="Цена покупки")
     sell_price = Column(Float, doc="Цена продажи")
     count_buy = Column(Integer, default=1, doc="Кол-во покупок")
-    stop = Column(Boolean, default=True)
+    # stop = Column(Boolean, default=True)
+    buy_order_id = Column(Integer, doc="id ордера на покупку")
+    sell_order_id = Column(Integer, doc="id ордера на продажу")
 
     def __repr__(self):
         return f'{self.name}'

@@ -73,8 +73,7 @@ parser.add_argument(
 parser.add_argument(
     '-p',
     '--param',
-    nargs='+',
-    metavar='KEY=VALUE',
+    type=int,
     help='Параметры',
 )
 parser.add_argument(

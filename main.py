@@ -56,5 +56,5 @@ if __name__ == '__main__':
     elif args.edit:
         get_update_coin(args.edit, args.param)
     elif args.list_orders:
-        # list_orders()
-        add_coin_order('BTCUSDT', 0.0001, 1050000)
+        list_orders()
+        # add_coin_order('BTCUSDT', 0.0001, 1050000)

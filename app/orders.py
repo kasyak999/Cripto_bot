@@ -14,7 +14,8 @@ def list_orders(symbol=None):
             'orderId': int(coin['orderId']),
             'leavesQty': float(coin['leavesQty']),
             'leavesValue': float(coin['leavesValue']),
-            'price': float(coin['price'])
+            'price': float(coin['price']),
+            'side': coin['side']
         })
     pprint(result)
     return result

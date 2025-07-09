@@ -80,7 +80,7 @@ def list_coins():
         average_price = f'{coin.average_price:.8f}' if coin.average_price else None
         buy_price = f'{coin.buy_price:.8f}' if coin.buy_price else None
         sell_price = f'{coin.sell_price:.8f}' if coin.sell_price else None
-        coin.stop = 'остановлено ⛔️' if coin.stop else 'в работе 🔄'
+        status = 'остановлено ⛔️' if not coin.sell_order_id else 'в работе 🔄'
         result_log += f'''
         -------- 🪙  {coin.name} --------
         🆔 id: {coin.id}
@@ -89,7 +89,7 @@ def list_coins():
         {Coin.__table__.columns.buy_price.doc}: {buy_price}
         {Coin.__table__.columns.sell_price.doc}: {sell_price}
         {Coin.__table__.columns.count_buy.doc}: {coin.count_buy}
-        Статус: {coin.stop}
+        Статус: {status}
         '''
     print(result_log)
 
@@ -117,47 +117,13 @@ def get_update_coin(id_coin, param):
         print(
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
-
-    if 'help' in param:
-        print(
-            f'ℹ️  Доступные параметры для изменения монеты {result.name}:\n\n'
-            f'start — {Coin.__table__.columns.average_price.doc} (пример: start=0.00123)\n'
-            'stop — 0 торговать или 1 остановить'
-            '\nПример использования: '
-            f'python main.py -e 1 -p start=0.00123 stop=1\n'
-            'Можно указать только нужные параметры.')
+    if param:
+        result.average_price = param
+        result.buy_price = param * PROCENT_BUY
+        result.sell_price = param * PROCENT_SELL
+    else:
+        print('Укажите цену: -p 100')
         return
-
-    param_dict = {'start': None, 'stop': None}
-
-    for item in param:
-        if '=' not in item:
-            print(
-                f'❌ Некорректный параметр: "{item}". '
-                'Ожидается формат ключ=значение. Введите help для помощи')
-            return
-
-        key, value = item.split('=', 1)
-        if key not in param_dict:
-            print(
-                f'❌ Недопустимый ключ: "{key}". '
-                f'Разрешены только: {", ".join(param_dict.keys())}.')
-            return
-
-        try:
-            param_dict[key] = float(value)
-        except ValueError:
-            print(f'❌ Значение для "{key}" должно быть числом.')
-            return
-
-    if param_dict['start'] is not None:
-        result.average_price = param_dict['start']
-        result.buy_price = param_dict['start'] * PROCENT_BUY
-        result.sell_price = param_dict['start'] * PROCENT_SELL
-
-    if param_dict['stop'] is not None:
-        param_dict['stop'] = False if int(param_dict['stop']) == 0 else True
-        result.stop = param_dict['stop']
     sessionDB.commit()
     print(f'✅ Монета {result.name} успешно обновлена')
 
