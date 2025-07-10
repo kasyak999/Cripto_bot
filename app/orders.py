@@ -33,13 +33,13 @@ def delete_coin_order(symbol=None):
         logger.info('Все ордера удалены')
 
 
-def add_coin_order(symbol, qty, price):
+def add_coin_order(symbol, qty, price, side):
     """ Создать лимитный ордер """
     try:
         session.place_order(
             category="spot",  # спотовый рынок
             symbol=symbol,  # торговая пара
-            side="Buy",  # "Buy" или "Sell"
+            side=side,  # "Buy" или "Sell"
             orderType="Limit",  # лимитный ордер
             qty=qty,  # количество базовой валюты
             price=price,  # цена лимитного ордера

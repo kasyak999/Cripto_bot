@@ -7,7 +7,7 @@ import requests.exceptions
 from app.config import args, logger
 from app.comand import (
     get_balance, get_add_coin, get_bot_start, get_info_coin,
-    list_coins, get_delete_coin, get_update_coin)
+    list_coins, get_delete_coin, get_update_coin, add_order)
 from app.db import sessionDB
 from app.orders import list_orders, delete_coin_order, add_coin_order
 
@@ -58,3 +58,5 @@ if __name__ == '__main__':
     elif args.list_orders:
         list_orders()
         # add_coin_order('BTCUSDT', 0.0001, 1050000)
+    elif args.order:
+        add_order(args.order)

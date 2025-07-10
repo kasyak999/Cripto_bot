@@ -9,6 +9,7 @@ from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import (
     validate_symbol, balance_coin, get_info_coin)
+from app.orders import add_coin_order
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
@@ -126,6 +127,27 @@ def get_update_coin(id_coin, param):
         return
     sessionDB.commit()
     print(f'✅ Монета {result.name} успешно обновлена')
+
+
+def add_order(id_coin):
+    result = sessionDB.execute(
+        select(Coin).where(Coin.id == id_coin)
+    ).scalars().first()
+
+    if result is None:
+        print(
+            f"❌ Монеты с id {id_coin}, нет в базе данных")
+        return
+
+    ticker = get_info_coin(session, result.name)
+    price = round(result.sell_price, ticker['priceFilter'])
+    qty = round(result.balance, ticker['base_precision'])
+    qty = (
+        math.floor(result.balance * 10**ticker['base_precision']))
+    qty = qty / 10**ticker['base_precision']
+    add_coin_order(
+        result.name, qty, price, 'Sell')  # продажа
+    # покупка
 
 
 def get_bot_start():

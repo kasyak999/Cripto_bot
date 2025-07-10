@@ -1,6 +1,7 @@
 from app.config import logger
 from pybit.exceptions import InvalidRequestError
 import decimal
+from pprint import pprint
 
 
 def validate_symbol(session, symbol):
@@ -38,6 +39,10 @@ def get_info_coin(session, symbol='BTCUSDT'):
     base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
     base_precision = abs(decimal.Decimal(
         str(base_precision)).as_tuple().exponent)
+    priceFilter = info["result"]["list"][0]["priceFilter"]['tickSize']
+    priceFilter = abs(decimal.Decimal(
+        str(priceFilter)).as_tuple().exponent)
+    
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
@@ -49,5 +54,6 @@ def get_info_coin(session, symbol='BTCUSDT'):
             f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
             f'Минимальный ордер: {min_order_usdt} USDT или '
             f'{min_order_coin} {ticker['symbol']}'
-        )
+        ),
+        'priceFilter': priceFilter
     }

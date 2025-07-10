@@ -73,7 +73,7 @@ parser.add_argument(
 parser.add_argument(
     '-p',
     '--param',
-    type=int,
+    type=float,
     help='Параметры',
 )
 parser.add_argument(
@@ -82,5 +82,10 @@ parser.add_argument(
     help='Получить список активных оредоров',
     action='store_true',
 )
-
+parser.add_argument(
+    '-o',
+    '--order',
+    type=int,
+    help='Добавить ордеры',
+)
 args = parser.parse_args()
