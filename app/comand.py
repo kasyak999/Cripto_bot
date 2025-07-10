@@ -143,23 +143,28 @@ def add_order(id_coin):
     ticker = get_info_coin(session, result.name)
     price_sell = round(result.sell_price, ticker['priceFilter'])
     price_buy = round(result.buy_price, ticker['priceFilter'])
-    qty = round(result.balance, ticker['base_precision'])
-    qty = (
+    qty_sell = round(result.balance, ticker['base_precision'])
+    qty_sell = (
         math.floor(result.balance * 10**ticker['base_precision']))
-    qty = qty / 10**ticker['base_precision']
-    add_coin_order(
-        result.name, qty, price_sell, 'Sell')  # продажа
-    add_coin_order(
-        result.name, qty, price_buy, 'Buy') # покупка
+    qty_sell = qty_sell / 10**ticker['base_precision']
 
-    for value in list_orders(result.name):
-        if value['side'] == 'Buy':
-            buy_order_id = value['orderId']
-        else:
-            sell_order_id = value['orderId']
-    result.buy_order_id = buy_order_id
-    result.sell_order_id = sell_order_id
-    sessionDB.commit()
+    # add_coin_order(
+    #     result.name, qty_sell, price_sell, 'Sell')  # продажа
+
+    qty_buy = round(10 / price_buy, ticker['base_precision'])
+    print(f'{qty_buy:.8f}')
+    add_coin_order(
+        result.name, qty_buy, price_buy, 'Buy') # покупка
+
+    # for value in list_orders(result.name):
+    #     if value['side'] == 'Buy':
+    #         buy_order_id = value['orderId']
+    #     else:
+    #         sell_order_id = value['orderId']
+
+    # result.buy_order_id = buy_order_id
+    # result.sell_order_id = sell_order_id
+    # sessionDB.commit()
 
 
 def get_bot_start():
