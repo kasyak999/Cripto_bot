@@ -180,12 +180,16 @@ def get_bot_start():
             if str(coin.buy_order_id) in i
         ), None)
         status_sell = next((
-            i[str(coin.sell_order_id)]
-            for i in orders
+            i[str(coin.sell_order_id)] for i in orders
             if str(coin.sell_order_id) in i
         ), None)
+
+        if status_buy == 'Filled':
+            print('ордер исполнен')
+        if status_sell == 'Filled':
+            print('ордер исполнен')
         time.sleep(1)
-        
+
         print(coin.name)
         print(status_sell)
         print(status_buy)
