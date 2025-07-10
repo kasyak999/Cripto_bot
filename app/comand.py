@@ -9,7 +9,7 @@ from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import (
     validate_symbol, balance_coin, get_info_coin)
-from app.orders import add_coin_order
+from app.orders import add_coin_order, list_orders
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
@@ -130,6 +130,7 @@ def get_update_coin(id_coin, param):
 
 
 def add_order(id_coin):
+    """ Создание ордеров на покупку и продажу """
     result = sessionDB.execute(
         select(Coin).where(Coin.id == id_coin)
     ).scalars().first()
@@ -140,14 +141,25 @@ def add_order(id_coin):
         return
 
     ticker = get_info_coin(session, result.name)
-    price = round(result.sell_price, ticker['priceFilter'])
+    price_sell = round(result.sell_price, ticker['priceFilter'])
+    price_buy = round(result.buy_price, ticker['priceFilter'])
     qty = round(result.balance, ticker['base_precision'])
     qty = (
         math.floor(result.balance * 10**ticker['base_precision']))
     qty = qty / 10**ticker['base_precision']
     add_coin_order(
-        result.name, qty, price, 'Sell')  # продажа
-    # покупка
+        result.name, qty, price_sell, 'Sell')  # продажа
+    add_coin_order(
+        result.name, qty, price_buy, 'Buy') # покупка
+
+    for value in list_orders(result.name):
+        if value['side'] == 'Buy':
+            buy_order_id = value['orderId']
+        else:
+            sell_order_id = value['orderId']
+    result.buy_order_id = buy_order_id
+    result.sell_order_id = sell_order_id
+    sessionDB.commit()
 
 
 def get_bot_start():

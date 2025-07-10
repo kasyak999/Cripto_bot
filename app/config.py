@@ -86,6 +86,6 @@ parser.add_argument(
     '-o',
     '--order',
     type=int,
-    help='Добавить ордеры',
+    help='Добавить ордеры на покупку и продажу',
 )
 args = parser.parse_args()

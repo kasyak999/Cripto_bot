@@ -17,7 +17,7 @@ def list_orders(symbol=None):
             'price': float(coin['price']),
             'side': coin['side']
         })
-    pprint(result)
+    # pprint(result)
     return result
 
 
