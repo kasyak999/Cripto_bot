@@ -45,6 +45,7 @@ def add_coin_order(symbol, qty, price, side):
             price=price,  # цена лимитного ордера
         )
     except (InvalidRequestError, FailedRequestError) as e:
-        logger.error(f'Ошибка API при создании ордера: {str(e)}')
+        logger.error(
+            f'{symbol}: {side} Ошибка API при создании ордера: {str(e)}')
     else:
-        logger.info('ордер создан')
+        logger.info(f'✅ {symbol}: {side} ордер создан')

@@ -1,15 +1,12 @@
 import os
-import decimal
 import math
 from pprint import pprint
 from sqlalchemy import select, update
-from pybit.exceptions import InvalidRequestError
 
 from app.config import session, logger
 from app.db import sessionDB, Coin
-from app.service import (
-    validate_symbol, balance_coin, get_info_coin)
-from app.orders import add_coin_order, list_orders
+from app.service import balance_coin, get_info_coin
+from app.orders import add_coin_order, list_orders, delete_coin_order
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
@@ -58,9 +55,14 @@ def get_add_coin(symbol):
     ).scalars().first()
 
     if result is None:
+        balance = (
+            math.floor(
+                float(balance['walletBalance']) * 10**ticker['base_precision']))
+        balance = balance / 10**ticker['base_precision']
+
         new_coin = Coin(
             name=symbol,
-            balance=balance['walletBalance'],
+            balance=balance,
         )
         sessionDB.add(new_coin)
         sessionDB.commit()
@@ -119,9 +121,10 @@ def get_update_coin(id_coin, param):
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
     if param:
+        ticker = get_info_coin(session, result.name)
         result.average_price = param
-        result.buy_price = param * PROCENT_BUY
-        result.sell_price = param * PROCENT_SELL
+        result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
+        result.sell_price = round(param * PROCENT_SELL, ticker['priceFilter'])
     else:
         print('Укажите цену: -p 100')
         return
@@ -130,7 +133,7 @@ def get_update_coin(id_coin, param):
 
 
 def add_order(id_coin):
-    """ Создание ордеров на покупку и продажу """
+    """ Добавление ордеров """
     result = sessionDB.execute(
         select(Coin).where(Coin.id == id_coin)
     ).scalars().first()
@@ -139,32 +142,27 @@ def add_order(id_coin):
         print(
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
-
+    delete_coin_order(result.name)
     ticker = get_info_coin(session, result.name)
-    price_sell = round(result.sell_price, ticker['priceFilter'])
-    price_buy = round(result.buy_price, ticker['priceFilter'])
-    qty_sell = round(result.balance, ticker['base_precision'])
-    qty_sell = (
-        math.floor(result.balance * 10**ticker['base_precision']))
-    qty_sell = qty_sell / 10**ticker['base_precision']
 
-    # add_coin_order(
-    #     result.name, qty_sell, price_sell, 'Sell')  # продажа
-
-    qty_buy = round(10 / price_buy, ticker['base_precision'])
-    print(f'{qty_buy:.8f}')
     add_coin_order(
-        result.name, qty_buy, price_buy, 'Buy') # покупка
+        result.name, result.balance, result.sell_price, 'Sell')  # продажа
 
-    # for value in list_orders(result.name):
-    #     if value['side'] == 'Buy':
-    #         buy_order_id = value['orderId']
-    #     else:
-    #         sell_order_id = value['orderId']
+    qty_buy = round(
+        (BUY_USDT * result.count_buy) / result.buy_price,
+        ticker['base_precision'])
+    add_coin_order(
+        result.name, qty_buy, result.buy_price, 'Buy')  # покупка
 
-    # result.buy_order_id = buy_order_id
-    # result.sell_order_id = sell_order_id
-    # sessionDB.commit()
+    orders = list_orders(result.name)
+    buy_order_id = next(
+        (i['orderId'] for i in orders if i['side'] == 'Buy'), None)
+    sell_order_id = next(
+        (i['orderId'] for i in orders if i['side'] == 'Sell'), None)
+
+    result.buy_order_id = buy_order_id if buy_order_id else None
+    result.sell_order_id = sell_order_id if sell_order_id else None
+    sessionDB.commit()
 
 
 def get_bot_start():

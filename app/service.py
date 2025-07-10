@@ -36,13 +36,15 @@ def get_info_coin(session, symbol='BTCUSDT'):
     # pprint(info)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
+    # Узнаем в каком формате отправлять монету
     base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
     base_precision = abs(decimal.Decimal(
         str(base_precision)).as_tuple().exponent)
+    # Узнаем в каком формате отправлять курс
     priceFilter = info["result"]["list"][0]["priceFilter"]['tickSize']
     priceFilter = abs(decimal.Decimal(
         str(priceFilter)).as_tuple().exponent)
-    
+
     return {
         'lastPrice': ticker["lastPrice"],
         'min_usdt': min_order_usdt,
