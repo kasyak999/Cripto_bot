@@ -1,5 +1,6 @@
 from app.config import logger
 from pybit.exceptions import InvalidRequestError, FailedRequestError
+from pprint import pprint
 
 
 def list_orders(session, symbol=None):
@@ -48,3 +49,24 @@ def add_coin_order(session, symbol, qty, price, side):
             f'{symbol}: {side} Ошибка API при создании ордера: {str(e)}')
     else:
         logger.info(f'✅ {symbol}: {side} ордер создан')
+
+
+def status_coin_order(session, symbol):
+    """ Проверка статуса ордера """
+    response = session.get_order_history(
+        category="spot",
+        symbol=symbol,
+        limit=2  # последние 2 ордеров
+    )
+    result = []
+    for i in response['result']['list']:
+        result.append({i['orderId']: i['orderStatus']})
+    return result
+
+# Created — ордер создан
+# New — новый ордер (ожидает исполнения)
+# Filled — полностью исполнен
+# PartiallyFilled — частично исполнен
+# Cancelled — отменён
+# Rejected — отклонён
+# PendingCancel — отмена в процессе

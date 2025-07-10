@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import balance_coin, get_info_coin
-from app.orders import add_coin_order, list_orders, delete_coin_order
+from app.orders import add_coin_order, list_orders, delete_coin_order, status_coin_order
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
@@ -170,30 +170,54 @@ def add_order(id_coin):
 def get_bot_start():
     """Запуск бота"""
     result = sessionDB.execute(
-        select(Coin).where(Coin.stop.is_(False))).scalars().all()
+        select(Coin).where(Coin.sell_order_id.is_not(None))
+    ).scalars().all()
 
     for coin in result:
-        ticker = get_info_coin(coin.name)
-        if get_min_limit(BUY_USDT, ticker):
-            sessionDB.execute(update(Coin).where(
-                Coin.name == coin.name).values(stop=True))
-            sessionDB.commit()
-            continue
+        print(coin.name)
+        orders = status_coin_order(session, coin.name)
+        status_buy = next(
+            (i[str(coin.buy_order_id)]
+             for i in orders
+             if str(coin.buy_order_id) in i), None)
+        status_sell = next(
+            (i[str(coin.sell_order_id)]
+             for i in orders
+             if str(coin.sell_order_id) in i), None)
 
-        if float(ticker["lastPrice"]) >= (coin.start * PROCENT_SELL):
-            logger.info(f'Продаем {coin.name}')
-            price_coin = round(coin.balance, ticker['base_precision'])
-            price_coin = (
-                math.floor(coin.balance * 10**ticker['base_precision']))
-            price_coin = price_coin / 10**ticker['base_precision']
-            if ticker['base_precision'] == 0:
-                price_coin = int(price_coin)
-            sell_coin(coin.name, price_coin)
-        else:
-            price_buy = coin.price_buy if coin.price_buy else coin.start
-            if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
-                logger.info(f'Покупаем {coin.name}')
-                buy_coin(coin.name, BUY_USDT)
+        print(status_sell)
+        print(status_buy)
+        print()
+
+
+
+# def get_bot_start():
+#     """Запуск бота"""
+#     result = sessionDB.execute(
+#         select(Coin).where(Coin.stop.is_(False))).scalars().all()
+
+#     for coin in result:
+#         ticker = get_info_coin(coin.name)
+#         if get_min_limit(BUY_USDT, ticker):
+#             sessionDB.execute(update(Coin).where(
+#                 Coin.name == coin.name).values(stop=True))
+#             sessionDB.commit()
+#             continue
+
+#         if float(ticker["lastPrice"]) >= (coin.start * PROCENT_SELL):
+#             logger.info(f'Продаем {coin.name}')
+#             price_coin = round(coin.balance, ticker['base_precision'])
+#             price_coin = (
+#                 math.floor(coin.balance * 10**ticker['base_precision']))
+#             price_coin = price_coin / 10**ticker['base_precision']
+#             if ticker['base_precision'] == 0:
+#                 price_coin = int(price_coin)
+#             sell_coin(coin.name, price_coin)
+#         else:
+#             price_buy = coin.price_buy if coin.price_buy else coin.start
+#             if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
+#                 logger.info(f'Покупаем {coin.name}')
+#                 buy_coin(coin.name, BUY_USDT)
 
 
 # def buy_coin(symbol, price):
