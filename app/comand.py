@@ -2,7 +2,7 @@ import os
 import math
 from pprint import pprint
 from sqlalchemy import select, update
-
+import time
 from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import balance_coin, get_info_coin
@@ -174,17 +174,19 @@ def get_bot_start():
     ).scalars().all()
 
     for coin in result:
-        print(coin.name)
         orders = status_coin_order(session, coin.name)
-        status_buy = next(
-            (i[str(coin.buy_order_id)]
-             for i in orders
-             if str(coin.buy_order_id) in i), None)
-        status_sell = next(
-            (i[str(coin.sell_order_id)]
-             for i in orders
-             if str(coin.sell_order_id) in i), None)
-
+        status_buy = next((
+            i[str(coin.buy_order_id)] for i in orders
+            if str(coin.buy_order_id) in i
+        ), None)
+        status_sell = next((
+            i[str(coin.sell_order_id)]
+            for i in orders
+            if str(coin.sell_order_id) in i
+        ), None)
+        time.sleep(1)
+        
+        print(coin.name)
         print(status_sell)
         print(status_buy)
         print()

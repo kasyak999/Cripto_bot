@@ -60,6 +60,7 @@ def status_coin_order(session, symbol):
     )
     result = []
     for i in response['result']['list']:
+        pprint(i)
         result.append({i['orderId']: i['orderStatus']})
     return result
 
