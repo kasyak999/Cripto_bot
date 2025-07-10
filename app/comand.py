@@ -142,19 +142,21 @@ def add_order(id_coin):
         print(
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
-    delete_coin_order(result.name)
+    delete_coin_order(session, result.name)
     ticker = get_info_coin(session, result.name)
 
     add_coin_order(
-        result.name, result.balance, result.sell_price, 'Sell')  # продажа
+        session, result.name, result.balance,
+        result.sell_price, 'Sell')  # продажа
 
     qty_buy = round(
         (BUY_USDT * result.count_buy) / result.buy_price,
         ticker['base_precision'])
     add_coin_order(
-        result.name, qty_buy, result.buy_price, 'Buy')  # покупка
+        session, result.name, qty_buy,
+        result.buy_price, 'Buy')  # покупка
 
-    orders = list_orders(result.name)
+    orders = list_orders(session, result.name)
     buy_order_id = next(
         (i['orderId'] for i in orders if i['side'] == 'Buy'), None)
     sell_order_id = next(

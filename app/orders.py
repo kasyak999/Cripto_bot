@@ -1,9 +1,8 @@
-from app.config import session, logger
-from pprint import pprint
+from app.config import logger
 from pybit.exceptions import InvalidRequestError, FailedRequestError
 
 
-def list_orders(symbol=None):
+def list_orders(session, symbol=None):
     """ Список ордеров """
     orders = session.get_open_orders(category="spot", symbol=symbol)
     result = []
@@ -21,7 +20,7 @@ def list_orders(symbol=None):
     return result
 
 
-def delete_coin_order(symbol=None):
+def delete_coin_order(session, symbol=None):
     """ Удалить все или один ордер """
     session.cancel_all_orders(
         category="spot",
@@ -33,7 +32,7 @@ def delete_coin_order(symbol=None):
         logger.info('Все ордера удалены')
 
 
-def add_coin_order(symbol, qty, price, side):
+def add_coin_order(session, symbol, qty, price, side):
     """ Создать лимитный ордер """
     try:
         session.place_order(
