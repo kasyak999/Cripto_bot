@@ -6,15 +6,16 @@ import time
 from app.config import session, logger
 from app.db import sessionDB, Coin
 from app.service import balance_coin, get_info_coin
-from app.orders import add_coin_order, list_orders, delete_coin_order, status_coin_order
+from app.orders import (
+    add_coin_order, list_orders, delete_coin_order, status_coin_order)
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
 PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
-PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.1'))
+PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
 # USDT на которую будет покупаться монета
-BUY_USDT = int(os.getenv('BUY_USDT', '5'))
+BUY_USDT = float(os.getenv('BUY_USDT', '5.1'))
 # Комиссия на покупку 0.1800% (по умолчанию 0.9982)
 COMMISSION = float(os.getenv('COMMISSION', '0.9982'))
 
@@ -83,7 +84,8 @@ def list_coins():
         average_price = f'{coin.average_price:.8f}' if coin.average_price else None
         buy_price = f'{coin.buy_price:.8f}' if coin.buy_price else None
         sell_price = f'{coin.sell_price:.8f}' if coin.sell_price else None
-        status = 'остановлено ⛔️' if not coin.sell_order_id else 'в работе 🔄'
+        buy_order_id = 'остановлено ⛔️' if not coin.buy_order_id else 'в работе 🔄'
+        sell_order_id = 'остановлено ⛔️' if not coin.sell_order_id else 'в работе 🔄'
         result_log += f'''
         -------- 🪙  {coin.name} --------
         🆔 id: {coin.id}
@@ -92,7 +94,8 @@ def list_coins():
         {Coin.__table__.columns.buy_price.doc}: {buy_price}
         {Coin.__table__.columns.sell_price.doc}: {sell_price}
         {Coin.__table__.columns.count_buy.doc}: {coin.count_buy}
-        Статус: {status}
+        {Coin.__table__.columns.buy_order_id.doc}: {buy_order_id}
+        {Coin.__table__.columns.sell_order_id.doc}: {sell_order_id}
         '''
     print(result_log)
 
@@ -106,6 +109,7 @@ def get_delete_coin(id_coin):
         print(
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
+    delete_coin_order(session, result.name)
     logger.info(f"{result.name} - монета удалена из базы данных")
     sessionDB.delete(result)
     sessionDB.commit()
