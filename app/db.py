@@ -16,6 +16,7 @@ Base = declarative_base(cls=PreBase)
 class Coin(Base):
     name = Column(String(200), unique=True, doc="Название монеты")
     balance = Column(Float, doc="Баланс")
+    purchase_price = Column(Float, doc="Цена покупки", default=0)
     average_price = Column(Float, doc="Средняя цена")
     buy_price = Column(Float, doc="Цена покупки")
     sell_price = Column(Float, doc="Цена продажи")

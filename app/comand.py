@@ -15,9 +15,7 @@ PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
 PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
 # USDT на которую будет покупаться монета
-BUY_USDT = float(os.getenv('BUY_USDT', '5.1'))
-# Комиссия на покупку 0.1800% (по умолчанию 0.9982)
-COMMISSION = float(os.getenv('COMMISSION', '0.9982'))
+BUY_USDT = float(os.getenv('BUY_USDT', '5.05'))
 
 
 def get_balance():
@@ -90,6 +88,7 @@ def list_coins():
         -------- 🪙  {coin.name} --------
         🆔 id: {coin.id}
         {Coin.__table__.columns.balance.doc}: {coin.balance:.8f}
+        {Coin.__table__.columns.purchase_price.doc}: {coin.purchase_price:.8f}
         {Coin.__table__.columns.average_price.doc}: {average_price}
         {Coin.__table__.columns.buy_price.doc}: {buy_price}
         {Coin.__table__.columns.sell_price.doc}: {sell_price}
@@ -126,9 +125,15 @@ def get_update_coin(id_coin, param):
         return
     if param:
         ticker = get_info_coin(session, result.name)
-        result.average_price = param
+        if result.purchase_price == 0:
+            result.average_price = param
+        else:
+            result.average_price = (result.average_price + param) / 2
+
+        result.purchase_price = param
         result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
-        result.sell_price = round(param * PROCENT_SELL, ticker['priceFilter'])
+        result.sell_price = round(result.average_price * PROCENT_SELL, ticker['priceFilter'])
+
     else:
         print('Укажите цену: -p 100')
         return
