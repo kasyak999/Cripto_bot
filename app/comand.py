@@ -1,7 +1,7 @@
 import os
 import math
 from pprint import pprint
-from sqlalchemy import select, update
+from sqlalchemy import select
 import time
 from app.config import session, logger
 from app.db import sessionDB, Coin
@@ -14,8 +14,6 @@ from app.orders import (
 PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
 PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
-# USDT на которую будет покупаться монета
-BUY_USDT = float(os.getenv('BUY_USDT', '5.05'))
 
 
 def get_balance():
