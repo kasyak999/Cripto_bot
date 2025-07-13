@@ -69,23 +69,24 @@ parser.add_argument(
     type=int,
     help='Изменить монету. Пример: -e <id> -p help'
 )
-
-parser.add_argument(
-    '-p',
-    '--param',
-    type=float,
-    help='Параметры',
-)
-parser.add_argument(
-    '-lo',
-    '--list_orders',
-    help='Получить список активных оредоров',
-    action='store_true',
-)
 parser.add_argument(
     '-o',
     '--order',
     type=int,
     help='Добавить ордеры на покупку и продажу',
 )
+
+parser.add_argument(
+    '-p',
+    '--price',
+    type=float,
+    help='Параметры',
+)
+parser.add_argument(
+    '-m',
+    '--multiply',
+    type=int,
+    help='Параметры',
+)
+
 args = parser.parse_args()

@@ -54,9 +54,6 @@ if __name__ == '__main__':
     elif args.delete:
         get_delete_coin(args.delete)
     elif args.edit:
-        get_update_coin(args.edit, args.param)
-    elif args.list_orders:
-        list_orders()
-        # add_coin_order('BTCUSDT', 0.0001, 1050000)
+        get_update_coin(args.edit, args.price, args.multiply)
     elif args.order:
         add_order(args.order)
