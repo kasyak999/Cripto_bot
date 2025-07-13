@@ -24,7 +24,16 @@ def get_balance():
         print('💼 В портфеле пока нет монет.')
         return
     result = '💰 Ваш крипто-портфель:\n'
+
+    locked = ''
     for value in response:
+        if value['coin'] == 'USDT':
+            locked = float(value['walletBalance']) - float(value['locked'])
+            locked = (
+                f'\n 💵 Всего USDT - {value['walletBalance']}'
+                f'\n 💰 Доступно USDT - {locked}')
+            continue
+
         result += (
             f'''
             -------- 🪙  {value['coin']} --------
@@ -33,7 +42,7 @@ def get_balance():
             '''
         )
         # pprint(coin)
-    print(result)
+    print(result + locked)
 
 
 def get_add_coin(symbol):
