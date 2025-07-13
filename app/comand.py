@@ -92,7 +92,6 @@ def list_coins():
         {Coin.__table__.columns.average_price.doc}: {average_price}
         {Coin.__table__.columns.buy_price.doc}: {buy_price}
         {Coin.__table__.columns.sell_price.doc}: {sell_price}
-        {Coin.__table__.columns.count_buy.doc}: {coin.count_buy}
         {Coin.__table__.columns.buy_order_id.doc}: {buy_order_id}
         {Coin.__table__.columns.sell_order_id.doc}: {sell_order_id}
         '''
@@ -114,9 +113,8 @@ def get_delete_coin(id_coin):
     sessionDB.commit()
 
 
-def get_update_coin(id_coin, param, multiply):
+def get_update_coin(id_coin, param):
     """ Изменить монету в базе данных """
-    multiply = 5 if not multiply else multiply
     result = sessionDB.execute(
         select(Coin).where(Coin.id == id_coin)
     ).scalars().first()
@@ -131,11 +129,18 @@ def get_update_coin(id_coin, param, multiply):
         else:
             result.average_price = (result.average_price + param) / 2
 
+        balance = balance_coin(session, result.name)
+        if not balance:
+            return
+        balance = (
+            math.floor(
+                float(balance['walletBalance']) * 10**ticker['base_precision']))
+        balance = balance / 10**ticker['base_precision']
+        result.balance = balance
         result.purchase_price = param
         result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
         result.sell_price = round(
             result.average_price * PROCENT_SELL, ticker['priceFilter'])
-        result.count_buy = multiply
     else:
         print('Укажите цену: -p 100')
         return
@@ -153,18 +158,13 @@ def add_order(id_coin):
         print(
             f"❌ Монеты с id {id_coin}, нет в базе данных")
         return
-    delete_coin_order(session, result.name)
-    ticker = get_info_coin(session, result.name)
 
+    delete_coin_order(session, result.name)
     add_coin_order(
         session, result.name, result.balance,
         result.sell_price, 'Sell')  # продажа
-
-    qty_buy = round(
-        result.count_buy / result.buy_price,
-        ticker['base_precision'])
     add_coin_order(
-        session, result.name, qty_buy,
+        session, result.name, result.balance,
         result.buy_price, 'Buy')  # покупка
 
     orders = list_orders(session, result.name)

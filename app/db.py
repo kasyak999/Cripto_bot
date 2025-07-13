@@ -18,10 +18,8 @@ class Coin(Base):
     balance = Column(Float, doc="Баланс")
     purchase_price = Column(Float, doc="Цена покупки", default=0)
     average_price = Column(Float, doc="Средняя цена")
-    buy_price = Column(Float, doc="Цена покупки")
-    sell_price = Column(Float, doc="Цена продажи")
-    count_buy = Column(Integer, doc="Покупка на USDT")
-    # stop = Column(Boolean, default=True)
+    buy_price = Column(Float, doc="Ордер на покупку")
+    sell_price = Column(Float, doc="Ордер на продажу")
     buy_order_id = Column(Integer, doc="id ордера на покупку")
     sell_order_id = Column(Integer, doc="id ордера на продажу")
 

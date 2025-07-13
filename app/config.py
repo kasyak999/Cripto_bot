@@ -82,11 +82,5 @@ parser.add_argument(
     type=float,
     help='Параметры',
 )
-parser.add_argument(
-    '-m',
-    '--multiply',
-    type=int,
-    help='Параметры',
-)
 
 args = parser.parse_args()
