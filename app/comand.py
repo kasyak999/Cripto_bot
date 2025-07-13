@@ -139,9 +139,8 @@ def get_update_coin(id_coin, param):
         balance = balance_coin(session, result.name)
         if not balance:
             return
-        balance = (
-            math.floor(
-                float(balance['walletBalance']) * 10**ticker['base_precision']))
+        balance = math.floor(
+            float(balance['walletBalance']) * 10**ticker['base_precision'])
         balance = balance / 10**ticker['base_precision']
         result.balance = balance
         result.purchase_price = param
@@ -203,12 +202,30 @@ def get_bot_start():
         ), None)
 
         if status_buy == 'Filled':
-            print('ордер исполнен')
-        if status_sell == 'Filled':
-            print('ордер исполнен')
+            logger.info('Ордер на покупку исполнен')
+            balance = balance_coin(session, coin.name)
+            ticker = get_info_coin(session, coin.name)
+
+            balance = math.floor(float(
+                balance['walletBalance']) * 10**ticker['base_precision'])
+            coin.balance = balance / 10**ticker['base_precision']
+            coin.average_price = round(
+                (coin.average_price + coin.buy_price) / 2, ticker['priceFilter'])
+            coin.purchase_price = coin.buy_price
+            coin.buy_price = round(
+                coin.buy_price * PROCENT_BUY, ticker['priceFilter'])
+            coin.sell_price = round(
+                coin.average_price * PROCENT_SELL, ticker['priceFilter'])
+
+            delete_coin_order(session, coin.name)
+            # нужна оптимизиция
+
+        elif status_sell == 'Filled':
+            print('ордер на продажу исполнен')
         time.sleep(1)
 
         print(coin.name)
-        print(status_sell)
-        print(status_buy)
-        print()
+        # print(status_sell)
+        # print(status_buy)
+        # print()
+    sessionDB.commit()
