@@ -5,7 +5,8 @@ venv/
 log.log
 docker-compose.yml
 Dockerfile
-**/db.sqlite3
+**/demo-db.sqlite3
+**/real-db.sqlite3
 docker-compose-test.yml
 
 info.png

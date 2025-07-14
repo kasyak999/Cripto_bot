@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, Float, Boolean
 from sqlalchemy.orm import declared_attr, declarative_base, Session
+from app.config import DEMO
 
 
 class PreBase:
@@ -27,6 +28,12 @@ class Coin(Base):
         return f'{self.name}'
 
 
-engine = create_engine('sqlite:///db/db.sqlite3')  # echo=True логи
+if not DEMO:
+    DB_NAME = 'real-db.sqlite3'
+else:
+    print('----- Вы в режиме демо счета -----')
+    DB_NAME = 'demo-db.sqlite3'
+
+engine = create_engine(f'sqlite:///db/{DB_NAME}')  # echo=True логи
 Base.metadata.create_all(engine)
 sessionDB = Session(engine)
