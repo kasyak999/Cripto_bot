@@ -12,14 +12,15 @@ from app.db import init_db
 import asyncio
 from pprint import pprint
 
-TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 60
+
+TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 20
 
 
-def start_bot():
+async def start_bot():
     """ Запуск бота в цикле"""
     while True:
         try:
-            get_bot_start()
+            await get_bot_start()
         except requests.exceptions.ReadTimeout as e:
             logger.error(f'❌ Ошибка при запросе к API: {e}')
         print(f'{datetime.now()}: Бот работает, жду {TIME_SLEEP} секунд...')
@@ -33,15 +34,16 @@ async def main():
             '⚠️  Не введена ни одна команда.\n'
             'Используйте -h или --help для справки.')
 
-    # if args.start:
-    #     logger.info('Запуск бота...')
-    #     try:
-    #         start_bot()
-    #     except KeyboardInterrupt:
-    #         pass
-    #     finally:
-    #         logger.info('Остановка бота...')
-    #         sessionDB.close()
+    if args.start:
+        logger.info('Запуск бота...')
+        await start_bot()
+        # try:
+        #     await start_bot()
+        # except KeyboardInterrupt:
+        #     pass
+        # finally:
+        #     logger.info('Остановка бота...')
+            # sessionDB.close()
     elif args.balance:
         await get_balance()
     elif args.list:

@@ -56,7 +56,7 @@ async def add_coin_order(session, symbol, qty, price, side):
         logger.info(f'✅ {symbol}: {side} ордер создан')
 
 
-def status_coin_order(session, symbol):
+async def status_coin_order(session, symbol):
     """ Проверка статуса ордера """
     response = session.get_order_history(
         category="spot",

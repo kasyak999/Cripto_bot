@@ -196,49 +196,37 @@ async def add_order(id_coin):
         await sessionDB.commit()
 
 
-def get_bot_start():
+async def get_bot_start():
     """Запуск бота"""
-    result = sessionDB.execute(
-        select(Coin).where(Coin.sell_order_id.is_not(None))
-    ).scalars().all()
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.sell_order_id.is_not(None)))
+        result = result.scalars().all()
 
-    for coin in result:
-        orders = status_coin_order(session, coin.name)
-        status_buy = next((
-            i[str(coin.buy_order_id)] for i in orders
-            if str(coin.buy_order_id) in i
-        ), None)
-        status_sell = next((
-            i[str(coin.sell_order_id)] for i in orders
-            if str(coin.sell_order_id) in i
-        ), None)
+        for coin in result:
+            orders = await status_coin_order(session, coin.name)
+            status_buy = next((
+                i[str(coin.buy_order_id)] for i in orders
+                if str(coin.buy_order_id) in i
+            ), None)
+            status_sell = next((
+                i[str(coin.sell_order_id)] for i in orders
+                if str(coin.sell_order_id) in i
+            ), None)
 
-        if status_buy == 'Filled':
-            logger.info('Ордер на покупку исполнен')
-            balance = balance_coin(coin.name)
-            ticker = get_info_coin(coin.name)
+            if status_buy == 'Filled':
+                logger.info(f'{coin.name}: Ордер на покупку исполнен')
+                await get_update_coin(coin.id, coin.buy_price)
+                await add_order(coin.id)
+            elif status_buy == 'Cancelled':
+                logger.info(f'{coin.name}: ордер на покупку отменен')
+                coin.buy_order_id = None
 
-            balance = math.floor(float(
-                balance['walletBalance']) * 10**ticker['base_precision'])
-            coin.balance = balance / 10**ticker['base_precision']
-            coin.average_price = round(
-                (coin.average_price + coin.buy_price) / 2, ticker['priceFilter'])
-            coin.purchase_price = coin.buy_price
-            coin.buy_price = round(
-                coin.buy_price * PROCENT_BUY, ticker['priceFilter'])
-            coin.sell_price = round(
-                coin.average_price * PROCENT_SELL, ticker['priceFilter'])
+            if status_sell == 'Filled':
+                logger.info(f'{coin.name}: ордер на продажу исполнен')
+                await get_delete_coin(coin.id)
+            elif status_sell == 'Cancelled':
+                logger.info(f'{coin.name}: ордер на продажу отменен')
+                coin.sell_order_id = None
 
-            delete_coin_order(session, coin.name)
-            # нужна оптимизиция
-
-        elif status_sell == 'Filled':
-            delete_coin_order(session, coin.name)
-            print('ордер на продажу исполнен')
-        time.sleep(1)
-
-        print(coin.name)
-        # print(status_sell)
-        # print(status_buy)
-        # print()
-    sessionDB.commit()
+        await sessionDB.commit()
