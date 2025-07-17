@@ -1,35 +1,42 @@
 import os
-import decimal
 import math
 from pprint import pprint
-from sqlalchemy import select, update
-from pybit.exceptions import InvalidRequestError
-
+from sqlalchemy import select
+import time
 from app.config import session, logger
-from app.db import sessionDB, Coin
-from app.service import (
-    validate_symbol, balance_coin, get_min_limit)
+from app.db import get_async_session, Coin
+from app.service import balance_coin, get_info_coin
+from app.orders import (
+    add_coin_order, list_orders, delete_coin_order, status_coin_order)
+import asyncio
 
 
 # Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
 PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
 # Процент роста для продажи +5% (+5% по умолчанию 1.05)
 PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
-# USDT на которую будет покупаться монета
-BUY_USDT = int(os.getenv('BUY_USDT', '5'))
-# Комиссия на покупку 0.1800% (по умолчанию 0.9982)
-COMMISSION = float(os.getenv('COMMISSION', '0.9982'))
 
 
-def get_balance():
+async def get_balance():
     """Получить список монет"""
-    response = session.get_wallet_balance(accountType="UNIFIED")
+    response = await asyncio.to_thread(
+        session.get_wallet_balance, accountType="UNIFIED")
+    # response = session.get_wallet_balance(accountType="UNIFIED")
     response = response['result']['list'][0]['coin']
     if not response:
         print('💼 В портфеле пока нет монет.')
         return
     result = '💰 Ваш крипто-портфель:\n'
+
+    locked = ''
     for value in response:
+        if value['coin'] == 'USDT':
+            locked = float(value['walletBalance']) - float(value['locked'])
+            locked = (
+                f'\n 💵 Всего USDT - {value['walletBalance']}'
+                f'\n 💰 Доступно USDT - {locked}')
+            continue
+
         result += (
             f'''
             -------- 🪙  {value['coin']} --------
@@ -38,258 +45,188 @@ def get_balance():
             '''
         )
         # pprint(coin)
-    print(result)
+    print(result + locked)
 
 
-def list_coins():
+async def get_add_coin(symbol):
+    """Добавить монету"""
+    symbol = symbol.upper() + 'USDT'
+    ticker = await get_info_coin(symbol)
+    if not ticker:
+        return
+
+    balance = await balance_coin(symbol)
+    if not balance:
+        return
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.name == symbol))
+        result = result.scalars().first()
+
+        if result is None:
+            balance = (
+                math.floor(
+                    float(
+                        balance['walletBalance']) * 10**ticker['base_precision']))
+            balance = balance / 10**ticker['base_precision']
+
+            new_coin = Coin(
+                name=symbol,
+                balance=balance,
+            )
+            sessionDB.add(new_coin)
+            await sessionDB.commit()
+            logger.info(f'✅ {symbol} добавлен в базу данных')
+        else:
+            print(f'{symbol} уже есть в базе данных')
+
+
+async def list_coins():
     """Получить список монет из базы данных"""
-    result = sessionDB.execute(
-        select(Coin)).scalars().all()
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(select(Coin))
+        result = result.scalars().all()
     if not result:
         print('📦 В базе данных нет ни одной монеты.')
         return
     result_log = '📊 Монеты, сохранённые в базе данных:\n'
     for coin in result:
-        price_buy = f'{coin.price_buy:.8f}' if coin.price_buy else None
-        coin.stop = 'остановлено ⛔️' if coin.stop else 'в работе 🔄'
+        average_price = f'{coin.average_price:.8f}' if coin.average_price else None
+        buy_price = f'{coin.buy_price:.8f}' if coin.buy_price else None
+        sell_price = f'{coin.sell_price:.8f}' if coin.sell_price else None
+        buy_order_id = 'остановлено ⛔️' if not coin.buy_order_id else 'в работе 🔄'
+        sell_order_id = 'остановлено ⛔️' if not coin.sell_order_id else 'в работе 🔄'
         result_log += f'''
         -------- 🪙  {coin.name} --------
         🆔 id: {coin.id}
-        🔹 Баланс: {coin.balance:.8f}
-        💵 Курс стартовой покупки: {coin.start:.8f}
-        💵 Курс последней покупки: {price_buy}
-        💸 Затрачено: {coin.payback:.8f}
-        Статус: {coin.stop}
+        {Coin.__table__.columns.balance.doc}: {coin.balance:.8f}
+        {Coin.__table__.columns.purchase_price.doc}: {coin.purchase_price:.8f}
+        {Coin.__table__.columns.average_price.doc}: {average_price}
+        {Coin.__table__.columns.buy_price.doc}: {buy_price}
+        {Coin.__table__.columns.sell_price.doc}: {sell_price}
+        {Coin.__table__.columns.buy_order_id.doc}: {buy_order_id}
+        {Coin.__table__.columns.sell_order_id.doc}: {sell_order_id}
         '''
     print(result_log)
 
 
-def get_info_coin(symbol='BTCUSDT'):
-    """Узнать cтоимость монеты и лимиты"""
-    ticker = validate_symbol(session, symbol)
-    if not ticker:
-        return
-    ticker = ticker['result']['list'][0]
-    info = session.get_instruments_info(category="spot", symbol=symbol)
-    # pprint(info)
-    min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
-    min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]
-    base_precision = info["result"]["list"][0]["lotSizeFilter"]["basePrecision"]
-    base_precision = abs(decimal.Decimal(
-        str(base_precision)).as_tuple().exponent)
-    return {
-        'lastPrice': ticker["lastPrice"],
-        'min_usdt': min_order_usdt,
-        'min_coin': min_order_coin,
-        'base_precision': base_precision,
-        'symbol': symbol,
-        'info': (
-            f'--- Информация о {ticker['symbol']}---\n'
-            f'Рыночная цена: {ticker["lastPrice"]} USDT\n'
-            f'Минимальный ордер: {min_order_usdt} USDT или '
-            f'{min_order_coin} {ticker['symbol']}'
-        )
-    }
-
-
-def get_add_coin(symbol):
-    """Добавить монету"""
-    symbol = symbol.upper() + 'USDT'
-    ticker = get_info_coin(symbol)
-    if not ticker:
-        return
-
-    balance = balance_coin(session, symbol)
-    if not balance:
-        return
-
-    result = sessionDB.execute(
-        select(Coin).where(Coin.name == symbol)
-    ).scalars().first()
-
-    if result is None:
-        if get_min_limit(BUY_USDT, ticker):
-            return
-
-        new_coin = Coin(
-            name=symbol,
-            start=ticker["lastPrice"],
-            balance=balance['walletBalance'],
-            payback=-abs(
-                float(balance['walletBalance']) * float(ticker["lastPrice"]))
-        )
-        sessionDB.add(new_coin)
-        sessionDB.commit()
-        logger.info(f'✅ {symbol} добавлен в базу данных')
-    else:
-        print(f'{symbol} уже есть в базе данных')
-
-
-def get_bot_start():
-    """Запуск бота"""
-    result = sessionDB.execute(
-        select(Coin).where(Coin.stop.is_(False))).scalars().all()
-
-    for coin in result:
-        ticker = get_info_coin(coin.name)
-        if get_min_limit(BUY_USDT, ticker):
-            sessionDB.execute(update(Coin).where(
-                Coin.name == coin.name).values(stop=True))
-            sessionDB.commit()
-            continue
-
-        if float(ticker["lastPrice"]) >= (coin.start * PROCENT_SELL):
-            logger.info(f'Продаем {coin.name}')
-            price_coin = round(coin.balance, ticker['base_precision'])
-            price_coin = (
-                math.floor(coin.balance * 10**ticker['base_precision']))
-            price_coin = price_coin / 10**ticker['base_precision']
-            if ticker['base_precision'] == 0:
-                price_coin = int(price_coin)
-            sell_coin(coin.name, price_coin)
-        else:
-            price_buy = coin.price_buy if coin.price_buy else coin.start
-            if float(ticker["lastPrice"]) <= (price_buy * PROCENT_BUY):
-                logger.info(f'Покупаем {coin.name}')
-                buy_coin(coin.name, BUY_USDT)
-
-
-def buy_coin(symbol, price):
-    """Купить монету"""
-    ticker = validate_symbol(session, symbol)
-    if not ticker:
-        # Проверка символа на корректность
-        return
-    result = sessionDB.execute(
-        select(Coin).where(Coin.name == symbol)
-    ).scalars().first()
-    try:
-        session.place_order(
-            category="spot",
-            symbol=symbol,
-            side="Buy",
-            orderType="Market",
-            qty=str(price)
-        )
-    except InvalidRequestError as e:
-        if "170131" in str(e):
-            result.start = True
-            logger.error("Недостаточно средств на балансе для покупки.")
-        else:
-            logger.error(f'Ошибка при покупке монеты: {str(e)}')
-    else:
-        ticker = ticker["result"]["list"][0]
-        logger.info(
-            f"✅ Куплено {symbol} на {price * COMMISSION} USDT"
-            f' по цене {ticker["lastPrice"]}')
-        balance = balance_coin(session, symbol)
-        result.price_buy = ticker["lastPrice"]
-        result.balance = balance['walletBalance']
-        result.payback -= price
-    sessionDB.commit()
-
-
-def sell_coin(symbol, price):
-    """Продать монету"""
-    ticker = validate_symbol(session, symbol)
-    if not ticker:
-        # Проверка символа на корректность
-        return
-    result = sessionDB.execute(
-        select(Coin).where(Coin.name == symbol)
-    ).scalars().first()
-    try:
-        session.place_order(
-            category="spot",
-            symbol=symbol,
-            side="Sell",
-            orderType="Market",
-            qty=str(price)
-        )
-    except InvalidRequestError as e:
-        logger.error(f'Ошибка при продаже монеты: {str(e)}')
-    else:
-        ticker = ticker["result"]["list"][0]
-        logger.info(
-            f"✅ Продано {price} {symbol}"
-            f' по цене {ticker["lastPrice"]}')
-        balance = balance_coin(session, symbol)
-        result.balance = balance['walletBalance']
-        result.payback += price * float(ticker["lastPrice"])
-        result.stop = True
-    sessionDB.commit()
-
-
-def get_delete_coin(id_coin):
+async def get_delete_coin(id_coin):
     """ Удалить монету из базы данных """
-    result = sessionDB.execute(
-        select(Coin).where(Coin.id == id_coin)
-    ).scalars().first()
-    if result is None:
-        print(
-            f"❌ Монеты с id {id_coin}, нет в базе данных")
-        return
-    logger.info(f"{result.name} - монета удалена из базы данных")
-    sessionDB.delete(result)
-    sessionDB.commit()
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.id == id_coin)
+        )
+        result = result.scalars().first()
+        if result is None:
+            print(
+                f"❌ Монеты с id {id_coin}, нет в базе данных")
+            return
+        await delete_coin_order(session, result.name)
+        logger.info(f"{result.name} - монета удалена из базы данных")
+        await sessionDB.delete(result)
+        await sessionDB.commit()
 
 
-def get_update_coin(id_coin, param):
+async def get_update_coin(id_coin, param):
     """ Изменить монету в базе данных """
-    result = sessionDB.execute(
-        select(Coin).where(Coin.id == id_coin)
-    ).scalars().first()
-    if result is None:
-        print(
-            f"❌ Монеты с id {id_coin}, нет в базе данных")
-        return
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.id == id_coin))
+        result = result.scalars().first()
+        result.balance = 555
 
-    if 'help' in param:
-        print(
-            f'ℹ️  Доступные параметры для изменения монеты {result.name}:\n\n'
-            'start — курс первой (стартовой) покупки (пример: start=0.00123)\n'
-            'buy — курс последней покупки (пример: buy=0.00110)\n'
-            'pay — общая сумма затрат на покупку монеты (пример: pay=150.50)\n'
-            'stop — 0 торговать или 1 остановить'
-            '\nПример использования: '
-            f'python main.py -e 1 -p start=0.00123 buy=0.00110\n'
-            'Можно указать только нужные параметры.')
-        return
-
-    param_dict = {
-        'start': None,
-        'buy': None,
-        'pay': None,
-        'stop': None
-    }
-    for item in param:
-        if '=' not in item:
+        if result is None:
             print(
-                f'❌ Некорректный параметр: "{item}". '
-                'Ожидается формат ключ=значение. Введите help для помощи')
+                f"❌ Монеты с id {id_coin}, нет в базе данных")
             return
+        if param:
+            ticker = await get_info_coin(result.name)
 
-        key, value = item.split('=', 1)
-        if key not in param_dict:
+            if result.purchase_price == 0:
+                result.average_price = param
+            else:
+                result.average_price = (result.average_price + param) / 2
+            balance = await balance_coin(result.name)
+            if not balance:
+                return
+
+            balance = math.floor(
+                float(balance['walletBalance']) * 10**ticker['base_precision'])
+            balance = balance / 10**ticker['base_precision']
+            result.balance = balance
+            result.purchase_price = param
+            result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
+            result.sell_price = round(
+                result.average_price * PROCENT_SELL, ticker['priceFilter'])
+
+            print(f'✅ Монета {result.name} успешно обновлена')
+            await sessionDB.commit()
+        else:
+            print('Укажите цену: -p 100')
+
+
+async def add_order(id_coin):
+    """ Добавление ордеров """
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.id == id_coin))
+        result = result.scalars().first()
+
+        if result is None:
             print(
-                f'❌ Недопустимый ключ: "{key}". '
-                f'Разрешены только: {", ".join(param_dict.keys())}.')
+                f"❌ Монеты с id {id_coin}, нет в базе данных")
             return
 
-        try:
-            param_dict[key] = float(value)
-        except ValueError:
-            print(f'❌ Значение для "{key}" должно быть числом.')
-            return
+        await delete_coin_order(session, result.name)
+        await add_coin_order(
+            session, result.name, result.balance,
+            result.sell_price, 'Sell')  # продажа
+        await add_coin_order(
+            session, result.name, result.balance,
+            result.buy_price, 'Buy')  # покупка
 
-    if param_dict['start'] is not None:
-        result.start = param_dict['start']
-    if param_dict['buy'] is not None:
-        result.price_buy = param_dict['buy']
-    if param_dict['pay'] is not None:
-        result.payback = param_dict['pay']
-    if param_dict['stop'] is not None:
-        param_dict['stop'] = False if int(param_dict['stop']) == 0 else True
-        result.stop = param_dict['stop']
-    sessionDB.commit()
-    print(f'✅ Монета {result.name} успешно обновлена')
+        orders = await list_orders(session, result.name)
+        buy_order_id = next(
+            (i['orderId'] for i in orders if i['side'] == 'Buy'), None)
+        sell_order_id = next(
+            (i['orderId'] for i in orders if i['side'] == 'Sell'), None)
+
+        result.buy_order_id = buy_order_id if buy_order_id else None
+        result.sell_order_id = sell_order_id if sell_order_id else None
+        await sessionDB.commit()
+
+
+async def get_bot_start():
+    """Запуск бота"""
+    async with get_async_session() as sessionDB:
+        result = await sessionDB.execute(
+            select(Coin).where(Coin.sell_order_id.is_not(None)))
+        result = result.scalars().all()
+
+        for coin in result:
+            orders = await status_coin_order(session, coin.name)
+            status_buy = next((
+                i[str(coin.buy_order_id)] for i in orders
+                if str(coin.buy_order_id) in i
+            ), None)
+            status_sell = next((
+                i[str(coin.sell_order_id)] for i in orders
+                if str(coin.sell_order_id) in i
+            ), None)
+
+            if status_buy == 'Filled':
+                logger.info(f'{coin.name}: Ордер на покупку исполнен')
+                await get_update_coin(coin.id, coin.buy_price)
+                await add_order(coin.id)
+            elif status_buy == 'Cancelled':
+                logger.info(f'{coin.name}: ордер на покупку отменен')
+                coin.buy_order_id = None
+
+            if status_sell == 'Filled':
+                logger.info(f'{coin.name}: ордер на продажу исполнен')
+                await get_delete_coin(coin.id)
+            elif status_sell == 'Cancelled':
+                logger.info(f'{coin.name}: ордер на продажу отменен')
+                coin.sell_order_id = None
+
+        await sessionDB.commit()
