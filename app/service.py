@@ -2,21 +2,15 @@ from app.config import logger
 from pybit.exceptions import InvalidRequestError
 import decimal
 from pprint import pprint
+from app.config import session
+import asyncio
 
 
-def validate_symbol(session, symbol):
-    """ Проверка символа на корректность """
-    try:
-        ticker = session.get_tickers(category="spot", symbol=symbol)
-        return ticker
-    except InvalidRequestError:
-        print(
-            f"{symbol} - такой монеты нет или она введена не правильно")
-
-
-def balance_coin(session, symbol):
+async def balance_coin(symbol):
     """Получить баланс монеты"""
-    response = session.get_wallet_balance(accountType="UNIFIED")
+    response = await asyncio.to_thread(
+        session.get_wallet_balance, accountType="UNIFIED")
+    # response = session.get_wallet_balance(accountType="UNIFIED")
     response = response['result']['list'][0]['coin']
     coin_name = symbol.replace("USDT", "")
     balance = next(
@@ -26,13 +20,21 @@ def balance_coin(session, symbol):
     return balance
 
 
-def get_info_coin(session, symbol='BTCUSDT'):
+async def get_info_coin(symbol='BTCUSDT'):
     """Узнать cтоимость монеты и лимиты"""
-    ticker = validate_symbol(session, symbol)
-    if not ticker:
+    try:
+        ticker = await asyncio.to_thread(
+            session.get_tickers, category="spot", symbol=symbol)
+        # ticker = session.get_tickers(category="spot", symbol=symbol)
+    except InvalidRequestError:
+        print(
+            f"{symbol} - такой монеты нет или она введена не правильно")
         return
+
     ticker = ticker['result']['list'][0]
-    info = session.get_instruments_info(category="spot", symbol=symbol)
+    info = await asyncio.to_thread(
+        session.get_instruments_info, category="spot", symbol=symbol)
+    # info = session.get_instruments_info(category="spot", symbol=symbol)
     # pprint(info)
     min_order_usdt = info["result"]["list"][0]["lotSizeFilter"]["minOrderAmt"]
     min_order_coin = info["result"]["list"][0]["lotSizeFilter"]["minOrderQty"]

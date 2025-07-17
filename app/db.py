@@ -1,7 +1,10 @@
-from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, Float, Boolean
-from sqlalchemy.orm import declared_attr, declarative_base, Session
 from app.config import DEMO
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession, create_async_engine, async_sessionmaker)
+from sqlalchemy.orm import declarative_base, declared_attr
+from contextlib import asynccontextmanager
 
 
 class PreBase:
@@ -12,6 +15,25 @@ class PreBase:
 
 
 Base = declarative_base(cls=PreBase)
+if not DEMO:
+    DB_NAME = 'real-db.sqlite3'
+else:
+    print('----- Вы в режиме демо счета -----')
+    DB_NAME = 'demo-db.sqlite3'
+engine = create_async_engine(f'sqlite+aiosqlite:///./db/{DB_NAME}')
+AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession)
+
+
+@asynccontextmanager
+async def get_async_session():
+    async with AsyncSessionLocal() as async_session:
+        yield async_session
+
+
+async def init_db():
+    """ Создание базы данных и таблиц """
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 class Coin(Base):
@@ -26,14 +48,3 @@ class Coin(Base):
 
     def __repr__(self):
         return f'{self.name}'
-
-
-if not DEMO:
-    DB_NAME = 'real-db.sqlite3'
-else:
-    print('----- Вы в режиме демо счета -----')
-    DB_NAME = 'demo-db.sqlite3'
-
-engine = create_engine(f'sqlite:///db/{DB_NAME}')  # echo=True логи
-Base.metadata.create_all(engine)
-sessionDB = Session(engine)

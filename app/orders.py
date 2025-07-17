@@ -1,11 +1,13 @@
 from app.config import logger
 from pybit.exceptions import InvalidRequestError, FailedRequestError
 from pprint import pprint
+import asyncio
 
 
-def list_orders(session, symbol=None):
+async def list_orders(session, symbol=None):
     """ Список ордеров """
-    orders = session.get_open_orders(category="spot", symbol=symbol)
+    orders = await asyncio.to_thread(
+        session.get_open_orders, category="spot", symbol=symbol)
     result = []
     for coin in orders['result']['list']:
         # pprint(coin)
@@ -21,22 +23,25 @@ def list_orders(session, symbol=None):
     return result
 
 
-def delete_coin_order(session, symbol=None):
+async def delete_coin_order(session, symbol=None):
     """ Удалить все или один ордер """
-    session.cancel_all_orders(
-        category="spot",
-        symbol=symbol
-    )
+    await asyncio.to_thread(
+        session.cancel_all_orders, category="spot", symbol=symbol)
+    # session.cancel_all_orders(
+    #     category="spot",
+    #     symbol=symbol
+    # )
     if symbol:
         logger.info(f'{symbol} ордера удалены')
     else:
         logger.info('Все ордера удалены')
 
 
-def add_coin_order(session, symbol, qty, price, side):
+async def add_coin_order(session, symbol, qty, price, side):
     """ Создать лимитный ордер """
     try:
-        session.place_order(
+        await asyncio.to_thread(
+            session.place_order,
             category="spot",  # спотовый рынок
             symbol=symbol,  # торговая пара
             side=side,  # "Buy" или "Sell"

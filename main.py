@@ -8,8 +8,9 @@ from app.config import args, logger
 from app.comand import (
     get_balance, get_add_coin, get_bot_start, get_info_coin,
     list_coins, get_delete_coin, get_update_coin, add_order)
-from app.db import sessionDB
-
+from app.db import init_db
+import asyncio
+from pprint import pprint
 
 TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 60
 
@@ -25,34 +26,38 @@ def start_bot():
         time.sleep(TIME_SLEEP)
 
 
-if __name__ == '__main__':
+async def main():
+    await init_db()
     if len(sys.argv) == 1:
         logger.error(
             '⚠️  Не введена ни одна команда.\n'
             'Используйте -h или --help для справки.')
 
-    if args.start:
-        logger.info('Запуск бота...')
-        try:
-            start_bot()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            logger.info('Остановка бота...')
-            sessionDB.close()
+    # if args.start:
+    #     logger.info('Запуск бота...')
+    #     try:
+    #         start_bot()
+    #     except KeyboardInterrupt:
+    #         pass
+    #     finally:
+    #         logger.info('Остановка бота...')
+    #         sessionDB.close()
     elif args.balance:
-        get_balance()
+        await get_balance()
     elif args.list:
-        list_coins()
+        await list_coins()
     elif args.info:
-        result = get_info_coin(args.info)
+        result = await get_info_coin(args.info)
         if result:
             print(result['info'])
     elif args.add:
-        get_add_coin(args.add)
+        await get_add_coin(args.add)
     elif args.delete:
-        get_delete_coin(args.delete)
+        await get_delete_coin(args.delete)
     elif args.edit:
-        get_update_coin(args.edit, args.price)
+        await get_update_coin(args.edit, args.price)
     elif args.order:
-        add_order(args.order)
+        await add_order(args.order)
+
+if __name__ == '__main__':
+    asyncio.run(main())
