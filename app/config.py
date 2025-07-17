@@ -80,7 +80,7 @@ parser.add_argument(
     '-p',
     '--price',
     type=float,
-    help='Параметры',
+    help='Цена входа',
 )
 
 args = parser.parse_args()
