@@ -134,7 +134,6 @@ async def get_update_coin(id_coin, param):
         result = await sessionDB.execute(
             select(Coin).where(Coin.id == id_coin))
         result = result.scalars().first()
-        result.balance = 555
 
         if result is None:
             print(
