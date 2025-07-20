@@ -7,7 +7,8 @@ from app.config import session, logger
 from app.db import get_async_session, Coin
 from app.service import balance_coin, get_info_coin
 from app.orders import (
-    add_coin_order, list_orders, delete_coin_order, status_coin_order)
+    add_coin_order, list_orders, delete_coin_order, status_coin_order,
+    buy_coin_order_market)
 import asyncio
 
 
@@ -224,9 +225,19 @@ async def get_bot_start():
 
             if status_sell == 'Filled':
                 logger.info(f'{coin.name}: ордер на продажу исполнен')
+                symbol, price = await buy_coin_order_market(session, coin.name)
                 await get_delete_coin(coin.id)
+                await get_add_coin(symbol)
+                # НУжно изменить запись
+                # Нужно добавить ордер новый
+
             elif status_sell == 'Cancelled':
                 logger.info(f'{coin.name}: ордер на продажу отменен')
                 coin.sell_order_id = None
 
         await sessionDB.commit()
+
+
+async def get_test(symbol):
+    symbol, price = await buy_coin_order_market(session, symbol)
+    print(symbol, price)

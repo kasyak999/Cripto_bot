@@ -7,7 +7,8 @@ import requests.exceptions
 from app.config import args, logger
 from app.comand import (
     get_balance, get_add_coin, get_bot_start, get_info_coin,
-    list_coins, get_delete_coin, get_update_coin, add_order)
+    list_coins, get_delete_coin, get_update_coin, add_order,
+    get_test)
 from app.db import init_db
 import asyncio
 from pprint import pprint
@@ -43,7 +44,7 @@ async def main():
         #     pass
         # finally:
         #     logger.info('Остановка бота...')
-            # sessionDB.close()
+        # sessionDB.close()
     elif args.balance:
         await get_balance()
     elif args.list:
@@ -60,6 +61,9 @@ async def main():
         await get_update_coin(args.edit, args.price)
     elif args.order:
         await add_order(args.order)
+
+    elif args.test:
+        await get_test(args.test)
 
 if __name__ == '__main__':
     asyncio.run(main())

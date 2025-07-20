@@ -83,4 +83,10 @@ parser.add_argument(
     help='Цена входа',
 )
 
+
+parser.add_argument(
+    '-t',
+    '--test',
+    help='Тестовая команда',
+)
 args = parser.parse_args()
