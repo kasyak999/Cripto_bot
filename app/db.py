@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
-from app.config import DEMO
-
+from contextlib import asynccontextmanager
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.ext.asyncio import (
     AsyncSession, create_async_engine, async_sessionmaker)
 from sqlalchemy.orm import declarative_base, declared_attr
-from contextlib import asynccontextmanager
+
+from app.config import DEMO
 
 
 class PreBase:

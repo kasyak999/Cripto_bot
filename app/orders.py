@@ -1,7 +1,8 @@
-from app.config import logger
-from pybit.exceptions import InvalidRequestError, FailedRequestError
-from pprint import pprint
 import asyncio
+from pybit.exceptions import InvalidRequestError, FailedRequestError
+
+from app.config import logger
+# from pprint import pprint
 
 
 async def list_orders(session, symbol=None):
@@ -56,25 +57,6 @@ async def add_coin_order(session, symbol, qty, price, side):
         logger.info(f'✅ {symbol}: {side} ордер создан')
 
 
-async def buy_coin_order_market(session, symbol):
-    """ Купить по раночной стоимости """
-    response = await asyncio.to_thread(
-        session.place_order,
-        category="spot",
-        symbol=symbol,
-        side="Buy",
-        orderType="Market",
-        qty=5.5
-    )
-    order_id = response["result"]["orderId"]
-    order_info = await asyncio.to_thread(
-        session.get_open_orders, category="spot", orderId=order_id)
-    symbol = order_info['result']['list'][0]['symbol']
-    symbol = symbol.replace("USDT", "")
-    price = order_info['result']['list'][0]['avgPrice']
-    return symbol, price
-
-
 async def status_coin_order(session, symbol):
     """ Проверка статуса ордера """
     response = session.get_order_history(
@@ -87,6 +69,25 @@ async def status_coin_order(session, symbol):
         # pprint(i)
         result.append({i['orderId']: i['orderStatus']})
     return result
+
+
+# async def buy_coin_order_market(session, symbol):
+#     """ Купить по раночной стоимости """
+#     response = await asyncio.to_thread(
+#         session.place_order,
+#         category="spot",
+#         symbol=symbol,
+#         side="Buy",
+#         orderType="Market",
+#         qty=5.5
+#     )
+#     order_id = response["result"]["orderId"]
+#     order_info = await asyncio.to_thread(
+#         session.get_open_orders, category="spot", orderId=order_id)
+#     symbol = order_info['result']['list'][0]['symbol']
+#     symbol = symbol.replace("USDT", "")
+#     price = order_info['result']['list'][0]['avgPrice']
+#     return symbol, price
 
 # Created — ордер создан
 # New — новый ордер (ожидает исполнения)
