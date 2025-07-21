@@ -145,7 +145,7 @@ async def get_update_coin(id_coin, param):
             if result.purchase_price == 0:
                 result.average_price = param
             else:
-                result.average_price = (result.average_price + param) / 2
+                result.average_price = (result.purchase_price + param) / 2
             balance = await balance_coin(result.name)
             if not balance:
                 return
