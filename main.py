@@ -13,7 +13,7 @@ import asyncio
 from pprint import pprint
 
 
-TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 20
+TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 60
 
 
 async def start_bot():
