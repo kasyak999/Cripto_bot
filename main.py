@@ -10,7 +10,7 @@ from app.comand import (
     list_coins, get_delete_coin, get_update_coin, add_order)
 from app.db import init_db
 import asyncio
-from pprint import pprint
+# from pprint import pprint
 
 
 TIME_SLEEP = int(os.getenv('TIME_SLEEP', '1')) * 60
