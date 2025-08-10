@@ -3,6 +3,11 @@ from pybit.exceptions import InvalidRequestError, FailedRequestError
 
 from app.config import logger
 # from pprint import pprint
+from app.service import get_info_coin
+import math
+
+
+USDT_SELL = 5.5
 
 
 async def list_orders(session, symbol=None):
@@ -40,6 +45,18 @@ async def delete_coin_order(session, symbol=None):
 
 async def add_coin_order(session, symbol, qty, price, side):
     """ Создать лимитный ордер """
+    if side == 'Sell':
+        ticker = await get_info_coin(symbol)
+        usdt_all = qty * price  # Перевод монет в USDT
+
+        if usdt_all - USDT_SELL < float(ticker['min_usdt']):
+            new_price = (usdt_all + USDT_SELL) / qty
+            price = round(new_price, ticker['priceFilter'])
+
+        usdt_sell = (qty * price) - USDT_SELL
+        qty_sell = usdt_sell / price
+        qty_sell = math.floor(qty_sell * 10**ticker['base_precision'])
+        qty = qty_sell / 10**ticker['base_precision']
     try:
         await asyncio.to_thread(
             session.place_order,

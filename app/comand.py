@@ -127,41 +127,42 @@ async def get_delete_coin(id_coin):
         await sessionDB.commit()
 
 
-async def get_update_coin(id_coin, param):
+async def get_update_coin(id_coin, param, sell=False):
     """ Изменить монету в базе данных """
     async with get_async_session() as sessionDB:
         result = await sessionDB.execute(
             select(Coin).where(Coin.id == id_coin))
         result = result.scalars().first()
 
+        balance = await balance_coin(result.name)
+        if not balance:
+            print('На балансе 0')
+            return
         if result is None:
             print(
                 f"❌ Монеты с id {id_coin}, нет в базе данных")
             return
-        if param:
-            ticker = await get_info_coin(result.name)
-
-            if result.purchase_price == 0:
-                result.average_price = param
-            else:
-                result.average_price = (result.purchase_price + param) / 2
-            balance = await balance_coin(result.name)
-            if not balance:
-                return
-
-            balance = math.floor(
-                float(balance['walletBalance']) * 10**ticker['base_precision'])
-            balance = balance / 10**ticker['base_precision']
-            result.balance = balance
-            result.purchase_price = param
-            result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
-            result.sell_price = round(
-                result.average_price * PROCENT_SELL, ticker['priceFilter'])
-
-            print(f'✅ Монета {result.name} успешно обновлена')
-            await sessionDB.commit()
-        else:
+        if not param:
             print('Укажите цену: -p 100')
+            return
+
+        if result.purchase_price == 0 or sell:
+            result.average_price = param
+        else:
+            result.average_price = (result.purchase_price + param) / 2
+
+        ticker = await get_info_coin(result.name)
+        balance = math.floor(
+            float(balance['walletBalance']) * 10**ticker['base_precision'])
+        balance = balance / 10**ticker['base_precision']
+        result.balance = balance
+        result.purchase_price = param
+        result.buy_price = round(param * PROCENT_BUY, ticker['priceFilter'])
+        result.sell_price = round(
+            result.average_price * PROCENT_SELL, ticker['priceFilter'])
+
+        print(f'✅ Монета {result.name} успешно обновлена')
+        await sessionDB.commit()
 
 
 async def add_order(id_coin):
@@ -220,7 +221,11 @@ async def get_bot_start():
 
             if status_sell == 'Filled':
                 logger.info(f'{coin.name}: ордер на продажу исполнен')
-                await get_delete_coin(coin.id)
+                ticker = await get_info_coin(coin.name)
+                await get_update_coin(
+                    coin.id, float(ticker['lastPrice']), True)
+                await add_order(coin.id)
+                # await get_delete_coin(coin.id)
 
             elif status_buy == 'Cancelled':
                 logger.info(f'{coin.name}: ордер на покупку отменен')
