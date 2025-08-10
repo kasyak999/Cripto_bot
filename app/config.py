@@ -12,6 +12,11 @@ DEMO = True if os.getenv('DEMO') == 'true' else False
 API_KEY = os.getenv('DEMO_API_KEY') if DEMO else os.getenv('API_KEY')
 API_SECRET = os.getenv('DEMO_API_SECRET') if DEMO else os.getenv('API_SECRET')
 
+# Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
+PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
+# Процент роста для продажи +5% (+5% по умолчанию 1.05)
+PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
+
 logger.remove()
 logger.add(
     sys.stdout,

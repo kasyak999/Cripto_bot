@@ -3,8 +3,7 @@ import decimal
 from pybit.exceptions import InvalidRequestError
 # from pprint import pprint
 
-from app.config import logger
-from app.config import session
+from app.config import logger, session
 
 
 async def balance_coin(symbol):

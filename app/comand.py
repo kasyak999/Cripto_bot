@@ -1,20 +1,14 @@
 import asyncio
-import os
 import math
 from sqlalchemy import select
 # from pprint import pprint
 
-from app.config import session, logger
+from app.config import session, logger, PROCENT_BUY, PROCENT_SELL
 from app.db import get_async_session, Coin
 from app.service import balance_coin, get_info_coin
 from app.orders import (
-    add_coin_order, list_orders, delete_coin_order, status_coin_order)
-
-
-# Процент снижения для поуцпки -5% (-5% по умолчанию 0.95)
-PROCENT_BUY = float(os.getenv('PROCENT_BUY', '0.95'))
-# Процент роста для продажи +5% (+5% по умолчанию 1.05)
-PROCENT_SELL = float(os.getenv('PROCENT_SELL', '1.05'))
+    add_coin_order, list_orders, delete_coin_order, status_coin_order
+)
 
 
 async def get_balance():
@@ -127,7 +121,7 @@ async def get_delete_coin(id_coin):
         await sessionDB.commit()
 
 
-async def get_update_coin(id_coin, param, sell=False):
+async def get_update_coin(id_coin, param):
     """ Изменить монету в базе данных """
     async with get_async_session() as sessionDB:
         result = await sessionDB.execute(
@@ -146,7 +140,7 @@ async def get_update_coin(id_coin, param, sell=False):
             print('Укажите цену: -p 100')
             return
 
-        if result.purchase_price == 0 or sell:
+        if result.purchase_price == 0:
             result.average_price = param
         else:
             result.average_price = (result.purchase_price + param) / 2
@@ -221,11 +215,7 @@ async def get_bot_start():
 
             if status_sell == 'Filled':
                 logger.info(f'{coin.name}: ордер на продажу исполнен')
-                ticker = await get_info_coin(coin.name)
-                await get_update_coin(
-                    coin.id, float(ticker['lastPrice']), True)
-                await add_order(coin.id)
-                # await get_delete_coin(coin.id)
+                await get_delete_coin(coin.id)
 
             elif status_buy == 'Cancelled':
                 logger.info(f'{coin.name}: ордер на покупку отменен')
